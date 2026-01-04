@@ -2,13 +2,26 @@ import { useFinances } from '@/hooks/useFinances';
 import { Header } from '@/components/Header';
 import { Dashboard } from '@/components/Dashboard';
 import { ExpenseList } from '@/components/ExpenseList';
+import { IncomeList } from '@/components/IncomeList';
+import { MonthSelector } from '@/components/MonthSelector';
+import { ProfileSelector } from '@/components/ProfileSelector';
+import { FinancialHealthCard } from '@/components/FinancialHealthCard';
+import { DebtEndingsCard } from '@/components/DebtEndingsCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutDashboard, List } from 'lucide-react';
+import { LayoutDashboard, List, TrendingUp, Heart } from 'lucide-react';
 
 const Index = () => {
   const {
     expenses,
-    userProfile,
+    allExpenses,
+    incomes,
+    profiles,
+    selectedProfileId,
+    setSelectedProfileId,
+    selectedMonth,
+    setSelectedMonth,
+    selectedYear,
+    setSelectedYear,
     totalIncome,
     totalExpenses,
     totalPaid,
@@ -18,30 +31,62 @@ const Index = () => {
     expensesByDueDay,
     totalByDueDay,
     expensesByType,
+    upcomingDebtEndings,
+    financialHealth,
     toggleExpenseStatus,
     addExpense,
     deleteExpense,
-    updateUserProfile,
+    addIncome,
+    deleteIncome,
+    addProfile,
+    deleteProfile,
   } = useFinances();
 
   return (
     <div className="min-h-screen bg-background">
       <Header
-        userProfile={userProfile}
-        onUpdateProfile={updateUserProfile}
+        profiles={profiles}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
         onAddExpense={addExpense}
+        onAddIncome={addIncome}
       />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Month Selector */}
+        <MonthSelector
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          onMonthChange={setSelectedMonth}
+          onYearChange={setSelectedYear}
+        />
+
+        {/* Profile Selector */}
+        <ProfileSelector
+          profiles={profiles}
+          selectedProfileId={selectedProfileId}
+          onSelectProfile={setSelectedProfileId}
+          onAddProfile={addProfile}
+          onDeleteProfile={deleteProfile}
+        />
+
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="dashboard" className="gap-2">
               <LayoutDashboard className="h-4 w-4" />
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
             <TabsTrigger value="expenses" className="gap-2">
               <List className="h-4 w-4" />
-              Despesas
+              <span className="hidden sm:inline">Despesas</span>
+            </TabsTrigger>
+            <TabsTrigger value="income" className="gap-2">
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden sm:inline">Receitas</span>
+            </TabsTrigger>
+            <TabsTrigger value="health" className="gap-2">
+              <Heart className="h-4 w-4" />
+              <span className="hidden sm:inline">Saúde</span>
             </TabsTrigger>
           </TabsList>
 
@@ -83,6 +128,21 @@ const Index = () => {
               onToggleStatus={toggleExpenseStatus}
               onDelete={deleteExpense}
             />
+          </TabsContent>
+
+          <TabsContent value="income" className="space-y-6">
+            <IncomeList
+              incomes={incomes}
+              profiles={profiles}
+              onDelete={deleteIncome}
+            />
+          </TabsContent>
+
+          <TabsContent value="health" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <FinancialHealthCard health={financialHealth} />
+              <DebtEndingsCard debts={upcomingDebtEndings} profiles={profiles} />
+            </div>
           </TabsContent>
         </Tabs>
       </main>

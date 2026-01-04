@@ -1,4 +1,4 @@
-import { Expense, expenseTypeLabels } from '@/types/finance';
+import { Expense, expenseTypeLabels, paymentMethodLabels } from '@/types/finance';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 interface ExpenseCardProps {
   expense: Expense;
   onToggleStatus: (id: string) => void;
@@ -66,6 +76,7 @@ export function ExpenseCard({ expense, onToggleStatus, onDelete }: ExpenseCardPr
           </div>
           <p className="text-sm text-muted-foreground">
             {expenseTypeLabels[expense.type]} • Vence dia {expense.dueDay}
+            {expense.paymentMethod && ` • ${paymentMethodLabels[expense.paymentMethod]}`}
           </p>
         </div>
 
@@ -101,22 +112,27 @@ export function ExpenseCard({ expense, onToggleStatus, onDelete }: ExpenseCardPr
             {isPaid ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg">
-                <MoreHorizontal className="h-4 w-4" />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => onDelete(expense.id)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Excluir
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir despesa?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja excluir a despesa "{expense.name}"?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(expense.id)}>
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
