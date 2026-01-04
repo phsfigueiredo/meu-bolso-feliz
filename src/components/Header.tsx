@@ -1,17 +1,25 @@
-import { Wallet } from 'lucide-react';
-import { UserProfile } from '@/types/finance';
-import { SalaryDialog } from './SalaryDialog';
+import { Wallet, Users } from 'lucide-react';
+import { FamilyProfile, Expense, Income } from '@/types/finance';
 import { AddExpenseDialog } from './AddExpenseDialog';
-import { Expense } from '@/types/finance';
+import { AddIncomeDialog } from './AddIncomeDialog';
+import { months } from '@/types/finance';
 
 interface HeaderProps {
-  userProfile: UserProfile;
-  onUpdateProfile: (profile: Partial<UserProfile>) => void;
+  profiles: FamilyProfile[];
+  selectedMonth: number;
+  selectedYear: number;
   onAddExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
+  onAddIncome: (income: Omit<Income, 'id' | 'createdAt'>) => void;
 }
 
-export function Header({ userProfile, onUpdateProfile, onAddExpense }: HeaderProps) {
-  const currentMonth = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date());
+export function Header({ 
+  profiles, 
+  selectedMonth, 
+  selectedYear, 
+  onAddExpense, 
+  onAddIncome 
+}: HeaderProps) {
+  const monthName = months.find(m => m.value === selectedMonth)?.label || '';
 
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-xl">
@@ -22,13 +30,25 @@ export function Header({ userProfile, onUpdateProfile, onAddExpense }: HeaderPro
           </div>
           <div>
             <h1 className="text-lg font-bold">MeuBolso</h1>
-            <p className="text-xs capitalize text-muted-foreground">{currentMonth}</p>
+            <p className="text-xs capitalize text-muted-foreground">
+              {monthName} de {selectedYear}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <SalaryDialog userProfile={userProfile} onUpdate={onUpdateProfile} />
-          <AddExpenseDialog onAdd={onAddExpense} />
+          <AddIncomeDialog 
+            profiles={profiles}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onAdd={onAddIncome}
+          />
+          <AddExpenseDialog 
+            profiles={profiles}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onAdd={onAddExpense}
+          />
         </div>
       </div>
     </header>

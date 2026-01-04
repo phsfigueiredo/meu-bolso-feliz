@@ -5,27 +5,33 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
-import { Expense, ExpenseType, PaymentType, expenseTypeLabels } from '@/types/finance';
+import { Expense, ExpenseType, PaymentType, PaymentMethod, FamilyProfile, expenseTypeLabels, paymentMethodLabels } from '@/types/finance';
 
 interface AddExpenseDialogProps {
+  profiles: FamilyProfile[];
+  selectedMonth: number;
+  selectedYear: number;
   onAdd: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
 }
 
-export function AddExpenseDialog({ onAdd }: AddExpenseDialogProps) {
+export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd }: AddExpenseDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<ExpenseType>('outros');
   const [amount, setAmount] = useState('');
   const [dueDay, setDueDay] = useState<'10' | '15' | '30'>('10');
   const [paymentType, setPaymentType] = useState<PaymentType>('recorrente');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [totalInstallments, setTotalInstallments] = useState('');
+  const [profileId, setProfileId] = useState(profiles[0]?.id || '');
+  const [endDate, setEndDate] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const parsedAmount = parseFloat(amount.replace(',', '.'));
 
-    if (!name || isNaN(parsedAmount)) return;
+    if (!name || isNaN(parsedAmount) || !profileId) return;
 
     const expense: Omit<Expense, 'id' | 'createdAt'> = {
       name,
@@ -33,12 +39,17 @@ export function AddExpenseDialog({ onAdd }: AddExpenseDialogProps) {
       amount: parsedAmount,
       dueDay: parseInt(dueDay) as 10 | 15 | 30,
       paymentType,
+      paymentMethod,
       status: 'nao_pago',
       totalPaid: 0,
       totalRemaining: parsedAmount,
+      profileId,
+      month: selectedMonth,
+      year: selectedYear,
       ...(paymentType === 'parcelado' && {
         currentInstallment: 1,
         totalInstallments: parseInt(totalInstallments) || 12,
+        endDate: endDate || undefined,
       }),
     };
 
@@ -53,7 +64,10 @@ export function AddExpenseDialog({ onAdd }: AddExpenseDialogProps) {
     setAmount('');
     setDueDay('10');
     setPaymentType('recorrente');
+    setPaymentMethod('pix');
     setTotalInstallments('');
+    setProfileId(profiles[0]?.id || '');
+    setEndDate('');
   };
 
   return (
@@ -64,7 +78,7 @@ export function AddExpenseDialog({ onAdd }: AddExpenseDialogProps) {
           Nova Despesa
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Despesa</DialogTitle>
         </DialogHeader>
@@ -77,6 +91,22 @@ export function AddExpenseDialog({ onAdd }: AddExpenseDialogProps) {
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Nubank, Aluguel..."
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Perfil</Label>
+            <Select value={profileId} onValueChange={setProfileId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um perfil" />
+              </SelectTrigger>
+              <SelectContent>
+                {profiles.map((profile) => (
+                  <SelectItem key={profile.id} value={profile.id}>
+                    {profile.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -123,30 +153,57 @@ export function AddExpenseDialog({ onAdd }: AddExpenseDialogProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Tipo de Pagamento</Label>
-              <Select value={paymentType} onValueChange={(v) => setPaymentType(v as PaymentType)}>
+              <Label>Forma de Pagamento</Label>
+              <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="recorrente">Recorrente</SelectItem>
-                  <SelectItem value="parcelado">Parcelado</SelectItem>
+                  {Object.entries(paymentMethodLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>Tipo de Pagamento</Label>
+            <Select value={paymentType} onValueChange={(v) => setPaymentType(v as PaymentType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recorrente">Recorrente</SelectItem>
+                <SelectItem value="parcelado">Parcelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {paymentType === 'parcelado' && (
-            <div className="space-y-2">
-              <Label htmlFor="installments">Total de Parcelas</Label>
-              <Input
-                id="installments"
-                type="number"
-                value={totalInstallments}
-                onChange={(e) => setTotalInstallments(e.target.value)}
-                placeholder="Ex: 12"
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="installments">Total de Parcelas</Label>
+                <Input
+                  id="installments"
+                  type="number"
+                  value={totalInstallments}
+                  onChange={(e) => setTotalInstallments(e.target.value)}
+                  placeholder="Ex: 12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">Data Final (opcional)</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </>
           )}
 
           <div className="flex justify-end gap-2 pt-4">
