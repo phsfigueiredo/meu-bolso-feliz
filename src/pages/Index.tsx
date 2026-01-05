@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useFinances } from '@/hooks/useFinances';
 import { Header } from '@/components/Header';
 import { Dashboard } from '@/components/Dashboard';
@@ -7,10 +8,13 @@ import { MonthSelector } from '@/components/MonthSelector';
 import { ProfileSelector } from '@/components/ProfileSelector';
 import { FinancialHealthCard } from '@/components/FinancialHealthCard';
 import { DebtEndingsCard } from '@/components/DebtEndingsCard';
+import { ExpenseDueDateFilter, DueDateFilter } from '@/components/ExpenseDueDateFilter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, List, TrendingUp, Heart } from 'lucide-react';
 
 const Index = () => {
+  const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>('all');
+  
   const {
     expenses,
     allExpenses,
@@ -29,6 +33,7 @@ const Index = () => {
     salaryCommitment,
     balance,
     expensesByDueDay,
+    expensesByDueDateStatus,
     totalByDueDay,
     expensesByType,
     upcomingDebtEndings,
@@ -41,6 +46,25 @@ const Index = () => {
     addProfile,
     deleteProfile,
   } = useFinances();
+
+  const filteredExpensesByDueDay = {
+    10: expensesByDueDateStatus[dueDateFilter].filter((exp) => exp.dueDay === 10),
+    15: expensesByDueDateStatus[dueDateFilter].filter((exp) => exp.dueDay === 15),
+    30: expensesByDueDateStatus[dueDateFilter].filter((exp) => exp.dueDay === 30),
+  };
+
+  const filteredTotalByDueDay = {
+    10: filteredExpensesByDueDay[10].reduce((sum, exp) => sum + exp.amount, 0),
+    15: filteredExpensesByDueDay[15].reduce((sum, exp) => sum + exp.amount, 0),
+    30: filteredExpensesByDueDay[30].reduce((sum, exp) => sum + exp.amount, 0),
+  };
+
+  const dueDateCounts = {
+    all: expensesByDueDateStatus.all.length,
+    today: expensesByDueDateStatus.today.length,
+    upcoming: expensesByDueDateStatus.upcoming.length,
+    overdue: expensesByDueDateStatus.overdue.length,
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -103,31 +127,39 @@ const Index = () => {
             />
           </TabsContent>
 
-          <TabsContent value="expenses" className="space-y-8">
-            <ExpenseList
-              title="Vencimento Dia 10"
-              dueDay={10}
-              expenses={expensesByDueDay[10]}
-              total={totalByDueDay[10]}
-              onToggleStatus={toggleExpenseStatus}
-              onDelete={deleteExpense}
+          <TabsContent value="expenses" className="space-y-6">
+            <ExpenseDueDateFilter
+              filter={dueDateFilter}
+              onFilterChange={setDueDateFilter}
+              counts={dueDateCounts}
             />
-            <ExpenseList
-              title="Vencimento Dia 15"
-              dueDay={15}
-              expenses={expensesByDueDay[15]}
-              total={totalByDueDay[15]}
-              onToggleStatus={toggleExpenseStatus}
-              onDelete={deleteExpense}
-            />
-            <ExpenseList
-              title="Vencimento Dia 30"
-              dueDay={30}
-              expenses={expensesByDueDay[30]}
-              total={totalByDueDay[30]}
-              onToggleStatus={toggleExpenseStatus}
-              onDelete={deleteExpense}
-            />
+            
+            <div className="space-y-8">
+              <ExpenseList
+                title="Vencimento Dia 10"
+                dueDay={10}
+                expenses={filteredExpensesByDueDay[10]}
+                total={filteredTotalByDueDay[10]}
+                onToggleStatus={toggleExpenseStatus}
+                onDelete={deleteExpense}
+              />
+              <ExpenseList
+                title="Vencimento Dia 15"
+                dueDay={15}
+                expenses={filteredExpensesByDueDay[15]}
+                total={filteredTotalByDueDay[15]}
+                onToggleStatus={toggleExpenseStatus}
+                onDelete={deleteExpense}
+              />
+              <ExpenseList
+                title="Vencimento Dia 30"
+                dueDay={30}
+                expenses={filteredExpensesByDueDay[30]}
+                total={filteredTotalByDueDay[30]}
+                onToggleStatus={toggleExpenseStatus}
+                onDelete={deleteExpense}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="income" className="space-y-6">

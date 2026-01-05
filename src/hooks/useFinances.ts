@@ -64,6 +64,50 @@ export function useFinances() {
     return grouped;
   }, [filteredExpenses]);
 
+  // Due date status filtering
+  const expensesByDueDateStatus = useMemo(() => {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth() + 1;
+    const currentYear = today.getFullYear();
+    
+    const isCurrentPeriod = selectedMonth === currentMonth && selectedYear === currentYear;
+    
+    const todayExpenses = filteredExpenses.filter((exp) => {
+      if (!isCurrentPeriod) return false;
+      return exp.dueDay === currentDay && exp.status === 'nao_pago';
+    });
+
+    const upcomingExpenses = filteredExpenses.filter((exp) => {
+      if (exp.status === 'pago') return false;
+      if (!isCurrentPeriod) {
+        // Future months - all unpaid are upcoming
+        if (selectedYear > currentYear) return true;
+        if (selectedYear === currentYear && selectedMonth > currentMonth) return true;
+        return false;
+      }
+      return exp.dueDay > currentDay;
+    });
+
+    const overdueExpenses = filteredExpenses.filter((exp) => {
+      if (exp.status === 'pago') return false;
+      if (!isCurrentPeriod) {
+        // Past months - all unpaid are overdue
+        if (selectedYear < currentYear) return true;
+        if (selectedYear === currentYear && selectedMonth < currentMonth) return true;
+        return false;
+      }
+      return exp.dueDay < currentDay;
+    });
+
+    return {
+      all: filteredExpenses,
+      today: todayExpenses,
+      upcoming: upcomingExpenses,
+      overdue: overdueExpenses,
+    };
+  }, [filteredExpenses, selectedMonth, selectedYear]);
+
   const totalByDueDay = useMemo(() => {
     return {
       10: expensesByDueDay[10].reduce((sum, exp) => sum + exp.amount, 0),
@@ -220,6 +264,7 @@ export function useFinances() {
     salaryCommitment,
     balance,
     expensesByDueDay,
+    expensesByDueDateStatus,
     totalByDueDay,
     expensesByType,
     upcomingDebtEndings,
