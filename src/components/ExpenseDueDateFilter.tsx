@@ -1,8 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarClock, CalendarCheck, CalendarX, Calendar } from 'lucide-react';
+import { CalendarClock, CalendarCheck, CalendarX, Calendar, CalendarDays } from 'lucide-react';
 
-export type DueDateFilter = 'all' | 'today' | 'upcoming' | 'overdue';
+export type DueDateFilter = 'all' | 'today' | 'thisWeek' | 'upcoming' | 'overdue';
 
 interface ExpenseDueDateFilterProps {
   filter: DueDateFilter;
@@ -10,6 +10,7 @@ interface ExpenseDueDateFilterProps {
   counts: {
     all: number;
     today: number;
+    thisWeek: number;
     upcoming: number;
     overdue: number;
   };
@@ -22,7 +23,8 @@ export function ExpenseDueDateFilter({
 }: ExpenseDueDateFilterProps) {
   const filters: { key: DueDateFilter; label: string; icon: React.ElementType; variant: 'default' | 'destructive' | 'secondary' | 'outline' }[] = [
     { key: 'all', label: 'Todas', icon: Calendar, variant: 'outline' },
-    { key: 'today', label: 'Vence Hoje', icon: CalendarClock, variant: 'secondary' },
+    { key: 'today', label: 'Hoje', icon: CalendarClock, variant: 'secondary' },
+    { key: 'thisWeek', label: 'Esta Semana', icon: CalendarDays, variant: 'default' },
     { key: 'upcoming', label: 'A Vencer', icon: CalendarCheck, variant: 'default' },
     { key: 'overdue', label: 'Vencidas', icon: CalendarX, variant: 'destructive' },
   ];

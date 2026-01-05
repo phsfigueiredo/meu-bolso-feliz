@@ -9,6 +9,8 @@ import { ProfileSelector } from '@/components/ProfileSelector';
 import { FinancialHealthCard } from '@/components/FinancialHealthCard';
 import { DebtEndingsCard } from '@/components/DebtEndingsCard';
 import { ExpenseDueDateFilter, DueDateFilter } from '@/components/ExpenseDueDateFilter';
+import { ExpenseAlerts } from '@/components/ExpenseAlerts';
+import { CopyFromPreviousMonth } from '@/components/CopyFromPreviousMonth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, List, TrendingUp, Heart } from 'lucide-react';
 
@@ -45,6 +47,9 @@ const Index = () => {
     deleteIncome,
     addProfile,
     deleteProfile,
+    hasDataInCurrentMonth,
+    hasPreviousMonthData,
+    copyFromPreviousMonth,
   } = useFinances();
 
   const filteredExpensesByDueDay = {
@@ -62,6 +67,7 @@ const Index = () => {
   const dueDateCounts = {
     all: expensesByDueDateStatus.all.length,
     today: expensesByDueDateStatus.today.length,
+    thisWeek: expensesByDueDateStatus.thisWeek.length,
     upcoming: expensesByDueDateStatus.upcoming.length,
     overdue: expensesByDueDateStatus.overdue.length,
   };
@@ -92,6 +98,19 @@ const Index = () => {
           onSelectProfile={setSelectedProfileId}
           onAddProfile={addProfile}
           onDeleteProfile={deleteProfile}
+        />
+
+        {/* Copy from previous month button */}
+        <CopyFromPreviousMonth
+          hasDataInCurrentMonth={hasDataInCurrentMonth}
+          hasPreviousMonthData={hasPreviousMonthData}
+          onCopy={copyFromPreviousMonth}
+        />
+
+        {/* Alerts for overdue and today expenses */}
+        <ExpenseAlerts
+          overdueExpenses={expensesByDueDateStatus.overdue}
+          todayExpenses={expensesByDueDateStatus.today}
         />
 
         <Tabs defaultValue="dashboard" className="space-y-6">

@@ -73,9 +73,18 @@ export function useFinances() {
     
     const isCurrentPeriod = selectedMonth === currentMonth && selectedYear === currentYear;
     
+    // Calculate end of week (next 7 days)
+    const endOfWeekDay = currentDay + 7;
+    
     const todayExpenses = filteredExpenses.filter((exp) => {
       if (!isCurrentPeriod) return false;
       return exp.dueDay === currentDay && exp.status === 'nao_pago';
+    });
+
+    const thisWeekExpenses = filteredExpenses.filter((exp) => {
+      if (exp.status === 'pago') return false;
+      if (!isCurrentPeriod) return false;
+      return exp.dueDay >= currentDay && exp.dueDay <= endOfWeekDay;
     });
 
     const upcomingExpenses = filteredExpenses.filter((exp) => {
@@ -103,6 +112,7 @@ export function useFinances() {
     return {
       all: filteredExpenses,
       today: todayExpenses,
+      thisWeek: thisWeekExpenses,
       upcoming: upcomingExpenses,
       overdue: overdueExpenses,
     };
@@ -240,6 +250,75 @@ export function useFinances() {
     return profiles.find((p) => p.id === id);
   }, [profiles]);
 
+  // Check if current month has data
+  const hasDataInCurrentMonth = useMemo(() => {
+    return filteredExpenses.length > 0 || filteredIncomes.length > 0;
+  }, [filteredExpenses, filteredIncomes]);
+
+  // Check if previous month has data
+  const previousMonthData = useMemo(() => {
+    const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+    const prevYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+    
+    const prevExpenses = expenses.filter((exp) => {
+      const matchMonth = exp.month === prevMonth && exp.year === prevYear;
+      const matchProfile = selectedProfileId === 'all' || exp.profileId === selectedProfileId;
+      return matchMonth && matchProfile;
+    });
+    
+    const prevIncomes = incomes.filter((inc) => {
+      const matchMonth = inc.month === prevMonth && inc.year === prevYear;
+      const matchProfile = selectedProfileId === 'all' || inc.profileId === selectedProfileId;
+      return matchMonth && matchProfile;
+    });
+
+    return {
+      expenses: prevExpenses,
+      incomes: prevIncomes,
+      hasData: prevExpenses.length > 0 || prevIncomes.length > 0,
+    };
+  }, [expenses, incomes, selectedMonth, selectedYear, selectedProfileId]);
+
+  const copyFromPreviousMonth = useCallback(() => {
+    const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+    const prevYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+
+    // Copy recurring expenses
+    const expensesToCopy = expenses.filter((exp) => {
+      const matchMonth = exp.month === prevMonth && exp.year === prevYear;
+      const matchProfile = selectedProfileId === 'all' || exp.profileId === selectedProfileId;
+      const isRecurring = exp.paymentType === 'recorrente';
+      return matchMonth && matchProfile && isRecurring;
+    });
+
+    const newExpenses = expensesToCopy.map((exp) => ({
+      ...exp,
+      id: `${Date.now()}-${Math.random()}`,
+      month: selectedMonth,
+      year: selectedYear,
+      status: 'nao_pago' as const,
+      createdAt: new Date().toISOString(),
+    }));
+
+    // Copy incomes
+    const incomesToCopy = incomes.filter((inc) => {
+      const matchMonth = inc.month === prevMonth && inc.year === prevYear;
+      const matchProfile = selectedProfileId === 'all' || inc.profileId === selectedProfileId;
+      return matchMonth && matchProfile;
+    });
+
+    const newIncomes = incomesToCopy.map((inc) => ({
+      ...inc,
+      id: `${Date.now()}-${Math.random()}`,
+      month: selectedMonth,
+      year: selectedYear,
+      createdAt: new Date().toISOString(),
+    }));
+
+    setExpenses((prev) => [...prev, ...newExpenses]);
+    setIncomes((prev) => [...prev, ...newIncomes]);
+  }, [expenses, incomes, selectedMonth, selectedYear, selectedProfileId]);
+
   return {
     // Data
     expenses: filteredExpenses,
@@ -279,5 +358,10 @@ export function useFinances() {
     addProfile,
     deleteProfile,
     getProfileById,
+    
+    // Copy functionality
+    hasDataInCurrentMonth,
+    hasPreviousMonthData: previousMonthData.hasData,
+    copyFromPreviousMonth,
   };
 }
