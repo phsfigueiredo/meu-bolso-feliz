@@ -11,11 +11,18 @@ import { DebtEndingsCard } from '@/components/DebtEndingsCard';
 import { ExpenseDueDateFilter, DueDateFilter } from '@/components/ExpenseDueDateFilter';
 import { ExpenseAlerts } from '@/components/ExpenseAlerts';
 import { CopyFromPreviousMonth } from '@/components/CopyFromPreviousMonth';
+import { EditExpenseDialog } from '@/components/EditExpenseDialog';
+import { EditIncomeDialog } from '@/components/EditIncomeDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, List, TrendingUp, Heart } from 'lucide-react';
+import { Expense, Income } from '@/types/finance';
 
 const Index = () => {
   const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>('all');
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const [editExpenseOpen, setEditExpenseOpen] = useState(false);
+  const [editIncomeOpen, setEditIncomeOpen] = useState(false);
   
   const {
     expenses,
@@ -43,8 +50,10 @@ const Index = () => {
     toggleExpenseStatus,
     addExpense,
     deleteExpense,
+    updateExpense,
     addIncome,
     deleteIncome,
+    updateIncome,
     addProfile,
     deleteProfile,
     hasDataInCurrentMonth,
@@ -70,6 +79,24 @@ const Index = () => {
     thisWeek: expensesByDueDateStatus.thisWeek.length,
     upcoming: expensesByDueDateStatus.upcoming.length,
     overdue: expensesByDueDateStatus.overdue.length,
+  };
+
+  const handleEditExpense = (expense: Expense) => {
+    setEditingExpense(expense);
+    setEditExpenseOpen(true);
+  };
+
+  const handleSaveExpense = (expense: Expense) => {
+    updateExpense(expense);
+  };
+
+  const handleEditIncome = (income: Income) => {
+    setEditingIncome(income);
+    setEditIncomeOpen(true);
+  };
+
+  const handleSaveIncome = (income: Income) => {
+    updateIncome(income);
   };
 
   return (
@@ -161,6 +188,7 @@ const Index = () => {
                 total={filteredTotalByDueDay[10]}
                 onToggleStatus={toggleExpenseStatus}
                 onDelete={deleteExpense}
+                onEdit={handleEditExpense}
               />
               <ExpenseList
                 title="Vencimento Dia 15"
@@ -169,6 +197,7 @@ const Index = () => {
                 total={filteredTotalByDueDay[15]}
                 onToggleStatus={toggleExpenseStatus}
                 onDelete={deleteExpense}
+                onEdit={handleEditExpense}
               />
               <ExpenseList
                 title="Vencimento Dia 30"
@@ -177,6 +206,7 @@ const Index = () => {
                 total={filteredTotalByDueDay[30]}
                 onToggleStatus={toggleExpenseStatus}
                 onDelete={deleteExpense}
+                onEdit={handleEditExpense}
               />
             </div>
           </TabsContent>
@@ -186,6 +216,7 @@ const Index = () => {
               incomes={incomes}
               profiles={profiles}
               onDelete={deleteIncome}
+              onEdit={handleEditIncome}
             />
           </TabsContent>
 
@@ -197,6 +228,22 @@ const Index = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Edit Dialogs */}
+      <EditExpenseDialog
+        expense={editingExpense}
+        profiles={profiles}
+        open={editExpenseOpen}
+        onOpenChange={setEditExpenseOpen}
+        onSave={handleSaveExpense}
+      />
+      <EditIncomeDialog
+        income={editingIncome}
+        profiles={profiles}
+        open={editIncomeOpen}
+        onOpenChange={setEditIncomeOpen}
+        onSave={handleSaveIncome}
+      />
     </div>
   );
 };

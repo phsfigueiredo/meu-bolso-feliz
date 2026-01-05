@@ -2,7 +2,7 @@ import { Expense, expenseTypeLabels, paymentMethodLabels } from '@/types/finance
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X, CreditCard, Home, GraduationCap, Banknote, Receipt, MoreHorizontal, Trash2 } from 'lucide-react';
+import { CheckCircle, CreditCard, Home, GraduationCap, Banknote, Receipt, MoreHorizontal, Trash2, Pencil } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,10 +20,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+
 interface ExpenseCardProps {
   expense: Expense;
   onToggleStatus: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (expense: Expense) => void;
 }
 
 const typeIcons = {
@@ -35,7 +37,7 @@ const typeIcons = {
   outros: MoreHorizontal,
 };
 
-export function ExpenseCard({ expense, onToggleStatus, onDelete }: ExpenseCardProps) {
+export function ExpenseCard({ expense, onToggleStatus, onDelete, onEdit }: ExpenseCardProps) {
   const Icon = typeIcons[expense.type];
   const isPaid = expense.status === 'pago';
 
@@ -99,17 +101,33 @@ export function ExpenseCard({ expense, onToggleStatus, onDelete }: ExpenseCardPr
 
         <div className="flex items-center gap-1">
           <Button
-            variant="ghost"
-            size="icon"
+            variant={isPaid ? 'ghost' : 'default'}
+            size="sm"
             className={cn(
-              'h-9 w-9 rounded-lg transition-colors',
+              'gap-2 transition-colors',
               isPaid
                 ? 'text-success hover:bg-success/10'
-                : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
             )}
             onClick={() => onToggleStatus(expense.id)}
           >
-            {isPaid ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+            {isPaid ? (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                Pago
+              </>
+            ) : (
+              'Pagar'
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-lg text-muted-foreground hover:text-primary"
+            onClick={() => onEdit(expense)}
+          >
+            <Pencil className="h-4 w-4" />
           </Button>
 
           <AlertDialog>

@@ -218,6 +218,10 @@ export function useFinances() {
     setExpenses((prev) => prev.filter((exp) => exp.id !== id));
   }, []);
 
+  const updateExpense = useCallback((expense: Expense) => {
+    setExpenses((prev) => prev.map((exp) => (exp.id === expense.id ? expense : exp)));
+  }, []);
+
   const addIncome = useCallback((income: Omit<Income, 'id' | 'createdAt'>) => {
     const newIncome: Income = {
       ...income,
@@ -229,6 +233,10 @@ export function useFinances() {
 
   const deleteIncome = useCallback((id: string) => {
     setIncomes((prev) => prev.filter((inc) => inc.id !== id));
+  }, []);
+
+  const updateIncome = useCallback((income: Income) => {
+    setIncomes((prev) => prev.map((inc) => (inc.id === income.id ? income : inc)));
   }, []);
 
   const addProfile = useCallback((profile: Omit<FamilyProfile, 'id'>) => {
@@ -353,8 +361,10 @@ export function useFinances() {
     toggleExpenseStatus,
     addExpense,
     deleteExpense,
+    updateExpense,
     addIncome,
     deleteIncome,
+    updateIncome,
     addProfile,
     deleteProfile,
     getProfileById,

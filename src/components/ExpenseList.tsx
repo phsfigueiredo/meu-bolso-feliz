@@ -9,6 +9,7 @@ interface ExpenseListProps {
   total: number;
   onToggleStatus: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (expense: Expense) => void;
 }
 
 export function ExpenseList({
@@ -18,6 +19,7 @@ export function ExpenseList({
   total,
   onToggleStatus,
   onDelete,
+  onEdit,
 }: ExpenseListProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -57,6 +59,7 @@ export function ExpenseList({
               expense={expense}
               onToggleStatus={onToggleStatus}
               onDelete={onDelete}
+              onEdit={onEdit}
             />
           </div>
         ))}

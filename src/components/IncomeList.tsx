@@ -1,7 +1,7 @@
 import { Income, FamilyProfile, incomeTypeLabels } from '@/types/finance';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, TrendingUp, RefreshCw } from 'lucide-react';
+import { Trash2, TrendingUp, RefreshCw, Pencil } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,9 +18,10 @@ interface IncomeListProps {
   incomes: Income[];
   profiles: FamilyProfile[];
   onDelete: (id: string) => void;
+  onEdit: (income: Income) => void;
 }
 
-export function IncomeList({ incomes, profiles, onDelete }: IncomeListProps) {
+export function IncomeList({ incomes, profiles, onDelete, onEdit }: IncomeListProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -93,6 +94,15 @@ export function IncomeList({ incomes, profiles, onDelete }: IncomeListProps) {
                   <span className="font-semibold text-success">
                     {formatCurrency(income.amount)}
                   </span>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    onClick={() => onEdit(income)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
