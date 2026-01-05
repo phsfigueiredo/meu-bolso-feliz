@@ -77,7 +77,7 @@ export function Dashboard({
       </div>
 
       {/* Secondary Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
         <StatCard
           title="Pendente"
           value={formatCurrency(totalPending)}
@@ -94,6 +94,12 @@ export function Dashboard({
         <StatCard
           title="Dia 15"
           value={formatCurrency(totalByDueDay[15])}
+          subtitle="Total de gastos"
+          icon={TrendingUp}
+        />
+        <StatCard
+          title="Dia 30"
+          value={formatCurrency(totalByDueDay[30])}
           subtitle="Total de gastos"
           icon={TrendingUp}
         />

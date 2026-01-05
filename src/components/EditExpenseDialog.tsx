@@ -1,21 +1,20 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
 import { Expense, ExpenseType, PaymentType, PaymentMethod, FamilyProfile, expenseTypeLabels, paymentMethodLabels } from '@/types/finance';
 
-interface AddExpenseDialogProps {
+interface EditExpenseDialogProps {
+  expense: Expense | null;
   profiles: FamilyProfile[];
-  selectedMonth: number;
-  selectedYear: number;
-  onAdd: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (expense: Expense) => void;
 }
 
-export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd }: AddExpenseDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditExpenseDialog({ expense, profiles, open, onOpenChange, onSave }: EditExpenseDialogProps) {
   const [name, setName] = useState('');
   const [type, setType] = useState<ExpenseType>('outros');
   const [amount, setAmount] = useState('');
@@ -24,29 +23,41 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [totalInstallments, setTotalInstallments] = useState('');
   const [currentInstallment, setCurrentInstallment] = useState('');
-  const [profileId, setProfileId] = useState(profiles[0]?.id || '');
+  const [profileId, setProfileId] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  useEffect(() => {
+    if (expense) {
+      setName(expense.name);
+      setType(expense.type);
+      setAmount(expense.amount.toString());
+      setDueDay(expense.dueDay.toString() as '10' | '15' | '30');
+      setPaymentType(expense.paymentType);
+      setPaymentMethod(expense.paymentMethod || 'pix');
+      setTotalInstallments(expense.totalInstallments?.toString() || '');
+      setCurrentInstallment(expense.currentInstallment?.toString() || '');
+      setProfileId(expense.profileId);
+      setEndDate(expense.endDate || '');
+    }
+  }, [expense]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const parsedAmount = parseFloat(amount.replace(',', '.'));
+    if (!expense) return;
 
+    const parsedAmount = parseFloat(amount.replace(',', '.'));
     if (!name || isNaN(parsedAmount) || !profileId) return;
 
-    const expense: Omit<Expense, 'id' | 'createdAt'> = {
+    const updatedExpense: Expense = {
+      ...expense,
       name,
       type,
       amount: parsedAmount,
       dueDay: parseInt(dueDay) as 10 | 15 | 30,
       paymentType,
       paymentMethod,
-      status: 'nao_pago',
-      totalPaid: 0,
-      totalRemaining: parsedAmount,
       profileId,
-      month: selectedMonth,
-      year: selectedYear,
       ...(paymentType === 'parcelado' && {
         currentInstallment: parseInt(currentInstallment) || 1,
         totalInstallments: parseInt(totalInstallments) || 12,
@@ -54,41 +65,21 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
       }),
     };
 
-    onAdd(expense);
-    setOpen(false);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setName('');
-    setType('outros');
-    setAmount('');
-    setDueDay('10');
-    setPaymentType('recorrente');
-    setPaymentMethod('pix');
-    setTotalInstallments('');
-    setCurrentInstallment('');
-    setProfileId(profiles[0]?.id || '');
-    setEndDate('');
+    onSave(updatedExpense);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Despesa
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Adicionar Nova Despesa</DialogTitle>
+          <DialogTitle>Editar Despesa</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome da Despesa</Label>
+            <Label htmlFor="edit-name">Nome da Despesa</Label>
             <Input
-              id="name"
+              id="edit-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Nubank, Aluguel..."
@@ -129,9 +120,9 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Valor (R$)</Label>
+              <Label htmlFor="edit-amount">Valor (R$)</Label>
               <Input
-                id="amount"
+                id="edit-amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0,00"
@@ -188,9 +179,9 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="currentInstallment">Parcela Atual</Label>
+                  <Label htmlFor="edit-current-installment">Parcela Atual</Label>
                   <Input
-                    id="currentInstallment"
+                    id="edit-current-installment"
                     type="number"
                     value={currentInstallment}
                     onChange={(e) => setCurrentInstallment(e.target.value)}
@@ -198,9 +189,9 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="installments">Total de Parcelas</Label>
+                  <Label htmlFor="edit-installments">Total de Parcelas</Label>
                   <Input
-                    id="installments"
+                    id="edit-installments"
                     type="number"
                     value={totalInstallments}
                     onChange={(e) => setTotalInstallments(e.target.value)}
@@ -209,9 +200,9 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endDate">Data Final (opcional)</Label>
+                <Label htmlFor="edit-endDate">Data Final (opcional)</Label>
                 <Input
-                  id="endDate"
+                  id="edit-endDate"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
@@ -221,10 +212,10 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
           )}
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">Adicionar</Button>
+            <Button type="submit">Salvar</Button>
           </div>
         </form>
       </DialogContent>
