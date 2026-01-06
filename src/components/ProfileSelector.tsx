@@ -68,33 +68,33 @@ export function ProfileSelector({
   };
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-2">
+    <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
       <button
         onClick={() => onSelectProfile('all')}
         className={cn(
-          'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap',
+          'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap shrink-0',
           selectedProfileId === 'all'
             ? 'bg-primary text-primary-foreground shadow-md'
             : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
         )}
       >
-        <User className="h-4 w-4" />
+        <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         Todos
       </button>
 
       {profiles.map((profile) => (
-        <div key={profile.id} className="relative group">
+        <div key={profile.id} className="relative group shrink-0">
           <button
             onClick={() => onSelectProfile(profile.id)}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap',
+              'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap',
               selectedProfileId === profile.id
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
             )}
           >
             <div 
-              className="h-3 w-3 rounded-full" 
+              className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full" 
               style={{ backgroundColor: profile.color }}
             />
             {profile.name}
@@ -102,11 +102,11 @@ export function ProfileSelector({
           
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Trash2 className="h-3 w-3" />
+              <button className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Trash2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               </button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
               <AlertDialogHeader>
                 <AlertDialogTitle>Excluir perfil?</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -126,12 +126,12 @@ export function ProfileSelector({
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="rounded-full gap-1">
-            <Plus className="h-4 w-4" />
-            Perfil
+          <Button variant="outline" size="sm" className="rounded-full gap-1 h-7 sm:h-8 px-2.5 sm:px-3 text-xs sm:text-sm shrink-0">
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Perfil</span>
           </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="max-w-[90vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Novo Perfil</DialogTitle>
           </DialogHeader>

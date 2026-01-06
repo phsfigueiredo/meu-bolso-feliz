@@ -26,17 +26,17 @@ export function ExpenseAlerts({ overdueExpenses, todayExpenses }: ExpenseAlertsP
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2 sm:space-y-3">
       {unpaidOverdue.length > 0 && (
-        <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
-          <XCircle className="h-5 w-5" />
-          <AlertTitle className="font-bold">
+        <Alert variant="destructive" className="border-destructive/50 bg-destructive/10 py-2.5 sm:py-3">
+          <XCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+          <AlertTitle className="font-bold text-sm sm:text-base">
             {unpaidOverdue.length} {unpaidOverdue.length === 1 ? 'conta vencida' : 'contas vencidas'}!
           </AlertTitle>
-          <AlertDescription>
+          <AlertDescription className="text-xs sm:text-sm">
             Você tem {formatCurrency(totalOverdue)} em contas vencidas que ainda não foram pagas.
             {unpaidOverdue.length <= 3 && (
-              <span className="block mt-1 text-sm opacity-90">
+              <span className="block mt-1 text-[11px] sm:text-sm opacity-90">
                 {unpaidOverdue.map(e => e.name).join(', ')}
               </span>
             )}
@@ -45,15 +45,15 @@ export function ExpenseAlerts({ overdueExpenses, todayExpenses }: ExpenseAlertsP
       )}
 
       {unpaidToday.length > 0 && (
-        <Alert className="border-warning/50 bg-warning/10 text-warning-foreground">
-          <Clock className="h-5 w-5 text-warning" />
-          <AlertTitle className="font-bold text-warning">
+        <Alert className="border-warning/50 bg-warning/10 text-warning-foreground py-2.5 sm:py-3">
+          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-warning" />
+          <AlertTitle className="font-bold text-warning text-sm sm:text-base">
             {unpaidToday.length} {unpaidToday.length === 1 ? 'conta vence hoje' : 'contas vencem hoje'}!
           </AlertTitle>
-          <AlertDescription className="text-warning/90">
+          <AlertDescription className="text-warning/90 text-xs sm:text-sm">
             Você tem {formatCurrency(totalToday)} para pagar hoje.
             {unpaidToday.length <= 3 && (
-              <span className="block mt-1 text-sm">
+              <span className="block mt-1 text-[11px] sm:text-sm">
                 {unpaidToday.map(e => e.name).join(', ')}
               </span>
             )}

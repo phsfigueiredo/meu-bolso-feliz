@@ -44,9 +44,9 @@ export function Dashboard({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Main Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
         <StatCard
           title="Renda Total"
           value={formatCurrency(totalIncome)}
@@ -77,7 +77,7 @@ export function Dashboard({
       </div>
 
       {/* Secondary Stats */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
         <StatCard
           title="Pendente"
           value={formatCurrency(totalPending)}
@@ -106,13 +106,13 @@ export function Dashboard({
       </div>
 
       {/* Charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <div className="stat-card">
-          <h3 className="mb-4 text-lg font-semibold">Gastos por Categoria</h3>
+          <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">Gastos por Categoria</h3>
           <ExpensesByTypeChart data={expensesByType} />
         </div>
         <div className="stat-card">
-          <h3 className="mb-4 text-lg font-semibold">Gastos por Dia de Vencimento</h3>
+          <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">Gastos por Dia de Vencimento</h3>
           <ExpensesByDueDayChart data={totalByDueDay} />
         </div>
       </div>

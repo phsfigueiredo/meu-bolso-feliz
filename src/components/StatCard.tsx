@@ -43,21 +43,21 @@ export function StatCard({
         className
       )}
     >
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1 sm:space-y-2 min-w-0">
           <p
             className={cn(
-              'text-sm font-medium',
+              'text-xs sm:text-sm font-medium truncate',
               variant === 'default' ? 'text-muted-foreground' : 'opacity-90'
             )}
           >
             {title}
           </p>
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="text-lg sm:text-2xl font-bold tracking-tight truncate">{value}</p>
           {subtitle && (
             <p
               className={cn(
-                'text-xs',
+                'text-[10px] sm:text-xs truncate',
                 variant === 'default' ? 'text-muted-foreground' : 'opacity-75'
               )}
             >
@@ -65,8 +65,8 @@ export function StatCard({
             </p>
           )}
         </div>
-        <div className={cn('rounded-xl p-3', iconStyles[variant])}>
-          <Icon className="h-5 w-5" />
+        <div className={cn('rounded-lg sm:rounded-xl p-2 sm:p-3 shrink-0', iconStyles[variant])}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
       </div>
     </div>
