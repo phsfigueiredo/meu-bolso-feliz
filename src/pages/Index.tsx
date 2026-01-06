@@ -109,7 +109,7 @@ const Index = () => {
         onAddIncome={addIncome}
       />
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Month Selector */}
         <MonthSelector
           selectedMonth={selectedMonth}
@@ -140,22 +140,22 @@ const Index = () => {
           todayExpenses={expensesByDueDateStatus.today}
         />
 
-        <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
-            <TabsTrigger value="dashboard" className="gap-2">
-              <LayoutDashboard className="h-4 w-4" />
+        <Tabs defaultValue="dashboard" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4 h-10 sm:h-11">
+            <TabsTrigger value="dashboard" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <LayoutDashboard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="expenses" className="gap-2">
-              <List className="h-4 w-4" />
+            <TabsTrigger value="expenses" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Despesas</span>
             </TabsTrigger>
-            <TabsTrigger value="income" className="gap-2">
-              <TrendingUp className="h-4 w-4" />
+            <TabsTrigger value="income" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Receitas</span>
             </TabsTrigger>
-            <TabsTrigger value="health" className="gap-2">
-              <Heart className="h-4 w-4" />
+            <TabsTrigger value="health" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Saúde</span>
             </TabsTrigger>
           </TabsList>
