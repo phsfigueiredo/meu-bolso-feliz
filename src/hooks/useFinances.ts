@@ -9,6 +9,7 @@ export function useFinances() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | 'all'>('all');
   const [selectedMonth, setSelectedMonth] = useState(1);
   const [selectedYear, setSelectedYear] = useState(2026);
+  const [debtGroups, setDebtGroups] = useState<string[]>([]);
 
   // Filter by month, year and profile
   const filteredExpenses = useMemo(() => {
@@ -258,6 +259,41 @@ export function useFinances() {
     return profiles.find((p) => p.id === id);
   }, [profiles]);
 
+  // Debt Groups management
+  const addDebtGroup = useCallback((name: string) => {
+    setDebtGroups((prev) => {
+      if (prev.includes(name)) return prev;
+      return [...prev, name];
+    });
+  }, []);
+
+  const editDebtGroup = useCallback((oldName: string, newName: string) => {
+    // Update group name
+    setDebtGroups((prev) => prev.map((g) => (g === oldName ? newName : g)));
+    // Update all expenses with this group
+    setExpenses((prev) =>
+      prev.map((exp) => (exp.groupName === oldName ? { ...exp, groupName: newName } : exp))
+    );
+  }, []);
+
+  const deleteDebtGroup = useCallback((name: string) => {
+    setDebtGroups((prev) => prev.filter((g) => g !== name));
+    // Remove group from expenses
+    setExpenses((prev) =>
+      prev.map((exp) => (exp.groupName === name ? { ...exp, groupName: undefined } : exp))
+    );
+  }, []);
+
+  const expenseCountByGroup = useMemo(() => {
+    const counts: Record<string, number> = {};
+    expenses.forEach((exp) => {
+      if (exp.groupName) {
+        counts[exp.groupName] = (counts[exp.groupName] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [expenses]);
+
   // Check if current month has data
   const hasDataInCurrentMonth = useMemo(() => {
     return filteredExpenses.length > 0 || filteredIncomes.length > 0;
@@ -368,6 +404,13 @@ export function useFinances() {
     addProfile,
     deleteProfile,
     getProfileById,
+    
+    // Debt Groups
+    debtGroups,
+    addDebtGroup,
+    editDebtGroup,
+    deleteDebtGroup,
+    expenseCountByGroup,
     
     // Copy functionality
     hasDataInCurrentMonth,

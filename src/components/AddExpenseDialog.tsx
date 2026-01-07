@@ -4,28 +4,30 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
-import { Expense, ExpenseType, PaymentType, PaymentMethod, FamilyProfile, expenseTypeLabels, paymentMethodLabels } from '@/types/finance';
+import { Plus, Folder } from 'lucide-react';
+import { Expense, ExpenseType, PaymentType, PaymentMethod, FamilyProfile, expenseTypeLabels, paymentMethodLabels, dueDayOrder, dueDayLabels } from '@/types/finance';
 
 interface AddExpenseDialogProps {
   profiles: FamilyProfile[];
   selectedMonth: number;
   selectedYear: number;
+  debtGroups?: string[];
   onAdd: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
 }
 
-export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd }: AddExpenseDialogProps) {
+export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGroups = [], onAdd }: AddExpenseDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<ExpenseType>('outros');
   const [amount, setAmount] = useState('');
-  const [dueDay, setDueDay] = useState<'10' | '15' | '30'>('10');
+  const [dueDay, setDueDay] = useState<'10' | '15' | '30'>('30');
   const [paymentType, setPaymentType] = useState<PaymentType>('recorrente');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [totalInstallments, setTotalInstallments] = useState('');
   const [currentInstallment, setCurrentInstallment] = useState('');
   const [profileId, setProfileId] = useState(profiles[0]?.id || '');
   const [endDate, setEndDate] = useState('');
+  const [groupName, setGroupName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +49,7 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
       profileId,
       month: selectedMonth,
       year: selectedYear,
+      groupName: groupName || undefined,
       ...(paymentType === 'parcelado' && {
         currentInstallment: parseInt(currentInstallment) || 1,
         totalInstallments: parseInt(totalInstallments) || 12,
@@ -63,13 +66,14 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
     setName('');
     setType('outros');
     setAmount('');
-    setDueDay('10');
+    setDueDay('30');
     setPaymentType('recorrente');
     setPaymentMethod('pix');
     setTotalInstallments('');
     setCurrentInstallment('');
     setProfileId(profiles[0]?.id || '');
     setEndDate('');
+    setGroupName('');
   };
 
   return (
@@ -147,9 +151,11 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="10">Dia 10</SelectItem>
-                  <SelectItem value="15">Dia 15</SelectItem>
-                  <SelectItem value="30">Dia 30</SelectItem>
+                  {dueDayOrder.map((day) => (
+                    <SelectItem key={day} value={day.toString()}>
+                      {dueDayLabels[day]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -169,6 +175,26 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, onAdd 
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Folder className="h-4 w-4" />
+              Grupo de Dívida (opcional)
+            </Label>
+            <Select value={groupName} onValueChange={setGroupName}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione ou deixe vazio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Sem grupo</SelectItem>
+                {debtGroups.map((group) => (
+                  <SelectItem key={group} value={group}>
+                    {group}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

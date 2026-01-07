@@ -3,7 +3,7 @@ import { useFinances } from '@/hooks/useFinances';
 import PasswordGate from '@/components/PasswordGate';
 import { Header } from '@/components/Header';
 import { Dashboard } from '@/components/Dashboard';
-import { ExpenseList } from '@/components/ExpenseList';
+import { GroupedExpenseList } from '@/components/GroupedExpenseList';
 import { IncomeList } from '@/components/IncomeList';
 import { MonthSelector } from '@/components/MonthSelector';
 import { ProfileSelector } from '@/components/ProfileSelector';
@@ -14,9 +14,10 @@ import { ExpenseAlerts } from '@/components/ExpenseAlerts';
 import { CopyFromPreviousMonth } from '@/components/CopyFromPreviousMonth';
 import { EditExpenseDialog } from '@/components/EditExpenseDialog';
 import { EditIncomeDialog } from '@/components/EditIncomeDialog';
+import { DebtGroupManager } from '@/components/DebtGroupManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, List, TrendingUp, Heart } from 'lucide-react';
-import { Expense, Income } from '@/types/finance';
+import { Expense, Income, dueDayOrder } from '@/types/finance';
 
 const Index = () => {
   const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>('all');
@@ -60,6 +61,11 @@ const Index = () => {
     hasDataInCurrentMonth,
     hasPreviousMonthData,
     copyFromPreviousMonth,
+    debtGroups,
+    addDebtGroup,
+    editDebtGroup,
+    deleteDebtGroup,
+    expenseCountByGroup,
   } = useFinances();
 
   const filteredExpensesByDueDay = {
@@ -107,6 +113,7 @@ const Index = () => {
         profiles={profiles}
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
+        debtGroups={debtGroups}
         onAddExpense={addExpense}
         onAddIncome={addIncome}
       />
@@ -176,40 +183,34 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="expenses" className="space-y-6">
-            <ExpenseDueDateFilter
-              filter={dueDateFilter}
-              onFilterChange={setDueDateFilter}
-              counts={dueDateCounts}
-            />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <ExpenseDueDateFilter
+                filter={dueDateFilter}
+                onFilterChange={setDueDateFilter}
+                counts={dueDateCounts}
+              />
+              <DebtGroupManager
+                groups={debtGroups}
+                onAddGroup={addDebtGroup}
+                onEditGroup={editDebtGroup}
+                onDeleteGroup={deleteDebtGroup}
+                expenseCountByGroup={expenseCountByGroup}
+              />
+            </div>
             
             <div className="space-y-8">
-              <ExpenseList
-                title="Vencimento Dia 10"
-                dueDay={10}
-                expenses={filteredExpensesByDueDay[10]}
-                total={filteredTotalByDueDay[10]}
-                onToggleStatus={toggleExpenseStatus}
-                onDelete={deleteExpense}
-                onEdit={handleEditExpense}
-              />
-              <ExpenseList
-                title="Vencimento Dia 15"
-                dueDay={15}
-                expenses={filteredExpensesByDueDay[15]}
-                total={filteredTotalByDueDay[15]}
-                onToggleStatus={toggleExpenseStatus}
-                onDelete={deleteExpense}
-                onEdit={handleEditExpense}
-              />
-              <ExpenseList
-                title="Vencimento Dia 30"
-                dueDay={30}
-                expenses={filteredExpensesByDueDay[30]}
-                total={filteredTotalByDueDay[30]}
-                onToggleStatus={toggleExpenseStatus}
-                onDelete={deleteExpense}
-                onEdit={handleEditExpense}
-              />
+              {dueDayOrder.map((day) => (
+                <GroupedExpenseList
+                  key={day}
+                  title={`Vencimento Dia ${day}`}
+                  dueDay={day}
+                  expenses={filteredExpensesByDueDay[day]}
+                  total={filteredTotalByDueDay[day]}
+                  onToggleStatus={toggleExpenseStatus}
+                  onDelete={deleteExpense}
+                  onEdit={handleEditExpense}
+                />
+              ))}
             </div>
           </TabsContent>
 
@@ -235,6 +236,7 @@ const Index = () => {
       <EditExpenseDialog
         expense={editingExpense}
         profiles={profiles}
+        debtGroups={debtGroups}
         open={editExpenseOpen}
         onOpenChange={setEditExpenseOpen}
         onSave={handleSaveExpense}

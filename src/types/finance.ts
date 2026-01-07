@@ -30,7 +30,17 @@ export interface Expense {
   profileId: string;
   month: number;
   year: number;
+  groupName?: string;
 }
+
+// Ordem dos dias de pagamento (primeiro pagamento do mês é dia 30)
+export const dueDayOrder: (10 | 15 | 30)[] = [30, 10, 15];
+
+export const dueDayLabels: Record<10 | 15 | 30, string> = {
+  30: '1º Pagamento (Dia 30)',
+  10: '2º Pagamento (Dia 10)',
+  15: '3º Pagamento (Dia 15)',
+};
 
 export type IncomeType = 'salario' | 'beneficio' | 'freelance' | 'investimento' | 'outros';
 

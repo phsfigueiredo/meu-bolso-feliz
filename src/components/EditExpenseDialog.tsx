@@ -4,27 +4,30 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Expense, ExpenseType, PaymentType, PaymentMethod, FamilyProfile, expenseTypeLabels, paymentMethodLabels } from '@/types/finance';
+import { Folder } from 'lucide-react';
+import { Expense, ExpenseType, PaymentType, PaymentMethod, FamilyProfile, expenseTypeLabels, paymentMethodLabels, dueDayOrder, dueDayLabels } from '@/types/finance';
 
 interface EditExpenseDialogProps {
   expense: Expense | null;
   profiles: FamilyProfile[];
+  debtGroups?: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (expense: Expense) => void;
 }
 
-export function EditExpenseDialog({ expense, profiles, open, onOpenChange, onSave }: EditExpenseDialogProps) {
+export function EditExpenseDialog({ expense, profiles, debtGroups = [], open, onOpenChange, onSave }: EditExpenseDialogProps) {
   const [name, setName] = useState('');
   const [type, setType] = useState<ExpenseType>('outros');
   const [amount, setAmount] = useState('');
-  const [dueDay, setDueDay] = useState<'10' | '15' | '30'>('10');
+  const [dueDay, setDueDay] = useState<'10' | '15' | '30'>('30');
   const [paymentType, setPaymentType] = useState<PaymentType>('recorrente');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [totalInstallments, setTotalInstallments] = useState('');
   const [currentInstallment, setCurrentInstallment] = useState('');
   const [profileId, setProfileId] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [groupName, setGroupName] = useState('');
 
   useEffect(() => {
     if (expense) {
@@ -38,6 +41,7 @@ export function EditExpenseDialog({ expense, profiles, open, onOpenChange, onSav
       setCurrentInstallment(expense.currentInstallment?.toString() || '');
       setProfileId(expense.profileId);
       setEndDate(expense.endDate || '');
+      setGroupName(expense.groupName || '');
     }
   }, [expense]);
 
@@ -58,6 +62,7 @@ export function EditExpenseDialog({ expense, profiles, open, onOpenChange, onSav
       paymentType,
       paymentMethod,
       profileId,
+      groupName: groupName || undefined,
       ...(paymentType === 'parcelado' && {
         currentInstallment: parseInt(currentInstallment) || 1,
         totalInstallments: parseInt(totalInstallments) || 12,
@@ -138,9 +143,11 @@ export function EditExpenseDialog({ expense, profiles, open, onOpenChange, onSav
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="10">Dia 10</SelectItem>
-                  <SelectItem value="15">Dia 15</SelectItem>
-                  <SelectItem value="30">Dia 30</SelectItem>
+                  {dueDayOrder.map((day) => (
+                    <SelectItem key={day} value={day.toString()}>
+                      {dueDayLabels[day]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -160,6 +167,26 @@ export function EditExpenseDialog({ expense, profiles, open, onOpenChange, onSav
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Folder className="h-4 w-4" />
+              Grupo de Dívida (opcional)
+            </Label>
+            <Select value={groupName} onValueChange={setGroupName}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione ou deixe vazio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Sem grupo</SelectItem>
+                {debtGroups.map((group) => (
+                  <SelectItem key={group} value={group}>
+                    {group}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
