@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useFinances } from '@/hooks/useFinances';
+import PasswordGate from '@/components/PasswordGate';
 import { Header } from '@/components/Header';
 import { Dashboard } from '@/components/Dashboard';
 import { ExpenseList } from '@/components/ExpenseList';
@@ -100,6 +101,7 @@ const Index = () => {
   };
 
   return (
+    <PasswordGate>
     <div className="min-h-screen bg-background">
       <Header
         profiles={profiles}
@@ -245,6 +247,7 @@ const Index = () => {
         onSave={handleSaveIncome}
       />
     </div>
+    </PasswordGate>
   );
 };
 
