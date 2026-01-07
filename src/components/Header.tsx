@@ -8,6 +8,7 @@ interface HeaderProps {
   profiles: FamilyProfile[];
   selectedMonth: number;
   selectedYear: number;
+  debtGroups?: string[];
   onAddExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
   onAddIncome: (income: Omit<Income, 'id' | 'createdAt'>) => void;
 }
@@ -15,7 +16,8 @@ interface HeaderProps {
 export function Header({ 
   profiles, 
   selectedMonth, 
-  selectedYear, 
+  selectedYear,
+  debtGroups = [],
   onAddExpense, 
   onAddIncome 
 }: HeaderProps) {
@@ -47,6 +49,7 @@ export function Header({
             profiles={profiles}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
+            debtGroups={debtGroups}
             onAdd={onAddExpense}
           />
         </div>

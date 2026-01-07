@@ -8,10 +8,11 @@ interface ExpensesByDueDayChartProps {
 export function ExpensesByDueDayChart({ data }: ExpensesByDueDayChartProps) {
   const isMobile = useIsMobile();
   
+  // Ordem: 30, 10, 15 (1º, 2º, 3º pagamento do mês)
   const chartData = [
-    { name: 'Dia 10', value: data[10], fill: 'hsl(var(--chart-1))' },
-    { name: 'Dia 15', value: data[15], fill: 'hsl(var(--chart-2))' },
-    { name: 'Dia 30', value: data[30], fill: 'hsl(var(--chart-3))' },
+    { name: '1º Pag. (Dia 30)', value: data[30], fill: 'hsl(var(--chart-1))' },
+    { name: '2º Pag. (Dia 10)', value: data[10], fill: 'hsl(var(--chart-2))' },
+    { name: '3º Pag. (Dia 15)', value: data[15], fill: 'hsl(var(--chart-3))' },
   ];
 
   const total = chartData.reduce((sum, item) => sum + item.value, 0);

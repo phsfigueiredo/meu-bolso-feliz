@@ -76,7 +76,7 @@ export function Dashboard({
         />
       </div>
 
-      {/* Secondary Stats */}
+      {/* Secondary Stats - Ordem: 30, 10, 15 */}
       <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
         <StatCard
           title="Pendente"
@@ -86,20 +86,20 @@ export function Dashboard({
           variant={totalPending > totalIncome * 0.5 ? 'warning' : 'default'}
         />
         <StatCard
-          title="Dia 10"
+          title="1º Pag. (Dia 30)"
+          value={formatCurrency(totalByDueDay[30])}
+          subtitle="Total de gastos"
+          icon={TrendingUp}
+        />
+        <StatCard
+          title="2º Pag. (Dia 10)"
           value={formatCurrency(totalByDueDay[10])}
           subtitle="Total de gastos"
           icon={TrendingUp}
         />
         <StatCard
-          title="Dia 15"
+          title="3º Pag. (Dia 15)"
           value={formatCurrency(totalByDueDay[15])}
-          subtitle="Total de gastos"
-          icon={TrendingUp}
-        />
-        <StatCard
-          title="Dia 30"
-          value={formatCurrency(totalByDueDay[30])}
           subtitle="Total de gastos"
           icon={TrendingUp}
         />
