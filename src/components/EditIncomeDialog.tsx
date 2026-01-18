@@ -117,12 +117,12 @@ export function EditIncomeDialog({
 
           <div className="space-y-2">
             <Label>Perfil</Label>
-            <Select value={profileId} onValueChange={setProfileId}>
+            <Select value={profileId || undefined} onValueChange={setProfileId}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um perfil" />
               </SelectTrigger>
               <SelectContent>
-                {profiles.map((profile) => (
+                {profiles.filter(p => p.id).map((profile) => (
                   <SelectItem key={profile.id} value={profile.id}>
                     {profile.name}
                   </SelectItem>
