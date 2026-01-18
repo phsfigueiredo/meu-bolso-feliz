@@ -182,12 +182,12 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGr
               <Folder className="h-4 w-4" />
               Grupo de Dívida (opcional)
             </Label>
-            <Select value={groupName} onValueChange={setGroupName}>
+            <Select value={groupName || "__none__"} onValueChange={(v) => setGroupName(v === "__none__" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione ou deixe vazio" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sem grupo</SelectItem>
+                <SelectItem value="__none__">Sem grupo</SelectItem>
                 {debtGroups.map((group) => (
                   <SelectItem key={group} value={group}>
                     {group}
