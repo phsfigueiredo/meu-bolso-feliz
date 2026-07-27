@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useFinances } from '@/hooks/useFinances';
 import PasswordGate from '@/components/PasswordGate';
+import SupabaseAuthGate from '@/components/SupabaseAuthGate';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { Header } from '@/components/Header';
 import { Dashboard } from '@/components/Dashboard';
 import { GroupedExpenseList } from '@/components/GroupedExpenseList';
@@ -20,11 +22,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, List, TrendingUp, Heart } from 'lucide-react';
 import { Expense, Income, dueDayOrder } from '@/types/finance';
 
-const Index = () => (
-  <PasswordGate>
-    <IndexContent />
-  </PasswordGate>
-);
+const Index = () =>
+  isSupabaseConfigured ? (
+    <SupabaseAuthGate>
+      <IndexContent />
+    </SupabaseAuthGate>
+  ) : (
+    <PasswordGate>
+      <IndexContent />
+    </PasswordGate>
+  );
 
 // Todo o conteúdo com useFinances fica aqui — só monta DEPOIS do unlock,
 // para que o seed criptografado tenha sido descriptografado e escrito no

@@ -114,6 +114,67 @@ Ver `.env.example`. As duas usadas:
 - `VITE_API_URL` — URL da API que o frontend chama (default `http://localhost:3001`)
 - `PORT`        — Porta do Express (default `3001`)
 
+## Modo Supabase (banco na nuvem, sync entre dispositivos)
+
+### O que muda
+
+Quando `VITE_SUPABASE_URL` está setado, o app usa **Supabase (Postgres na nuvem)**
+em vez do IndexedDB do navegador. Consequências:
+
+- Dados sincronizam entre celular/PC/qualquer navegador
+- Login por email + senha (Supabase Auth)
+- RLS garante que só você acessa seus dados
+- Não depende mais de manter o `seed.enc.json` atualizado no repo
+- Free forever no plano gratuito do Supabase (500MB DB)
+
+### Setup do zero
+
+1. **Criar projeto no Supabase**
+   - https://supabase.com/dashboard → **New project**
+   - Anote a **Project URL** e a **anon public key** (Settings → API)
+
+2. **Rodar a migration SQL**
+   - Dashboard → **SQL Editor** → cole o conteúdo de
+     `supabase/migrations/0001_init.sql` → **Run**
+
+3. **Configurar .env local** (para dev/build local)
+
+   ```
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+   ```
+
+4. **Configurar secrets do GitHub Actions** (para o deploy automático)
+   - Repo → Settings → Secrets and variables → Actions → **New repository secret**
+   - Cria `VITE_SUPABASE_URL` (valor = mesma URL)
+   - Cria `VITE_SUPABASE_PUBLISHABLE_KEY` (valor = mesma anon key)
+
+5. **Criar usuário na primeira visita**
+   - Abre o app publicado → clica em "Não tenho conta — criar uma"
+   - Coloca email + senha (mínimo 6 caracteres)
+   - Se a confirmação por email estiver ativa no projeto Supabase, verifica a caixa
+
+6. **Importar seus dados (primeira vez)**
+   - Depois de logado, canto inferior direito → botão de download
+   - Digita a senha do seed criptografado (`PedroeYasmim` ou a que você trocou)
+   - Popula sua conta com os 205 lançamentos originais
+
+### Se der erro "row-level security policy" nas queries
+
+Provavelmente a migration SQL não rodou. Confere:
+- Dashboard → Table Editor → devem existir `profiles`, `incomes`, `expenses`, `debt_groups`
+- Se não existirem, roda `supabase/migrations/0001_init.sql` novamente
+
+### Como saber qual backend está ativo
+
+O `storage.ts` decide na ordem:
+1. `VITE_STORAGE` explícito (`supabase` | `api` | `local`)
+2. Se `VITE_SUPABASE_URL` está setado → **supabase**
+3. Se `/api/health` responde → **api** (Express local)
+4. Fallback → **local** (IndexedDB)
+
+Para forçar um modo, defina `VITE_STORAGE` no `.env` ou nas env vars do build.
+
 ## Deploy no GitHub Pages
 
 O deploy é automático: qualquer push na `main` dispara o workflow
