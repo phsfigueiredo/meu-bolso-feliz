@@ -2,6 +2,7 @@ import { Wallet, Users } from 'lucide-react';
 import { FamilyProfile, Expense, Income } from '@/types/finance';
 import { AddExpenseDialog } from './AddExpenseDialog';
 import { AddIncomeDialog } from './AddIncomeDialog';
+import { SaveButton } from './SaveButton';
 import { months } from '@/types/finance';
 
 interface HeaderProps {
@@ -11,6 +12,10 @@ interface HeaderProps {
   debtGroups?: string[];
   onAddExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
   onAddIncome: (income: Omit<Income, 'id' | 'createdAt'>) => void;
+  onSave: () => boolean;
+  isSaving: boolean;
+  lastSaved: Date | null;
+  hasUnsavedChanges: boolean;
 }
 
 export function Header({ 
@@ -19,7 +24,11 @@ export function Header({
   selectedYear,
   debtGroups = [],
   onAddExpense, 
-  onAddIncome 
+  onAddIncome,
+  onSave,
+  isSaving,
+  lastSaved,
+  hasUnsavedChanges,
 }: HeaderProps) {
   const monthName = months.find(m => m.value === selectedMonth)?.label || '';
 
@@ -39,6 +48,12 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
+          <SaveButton
+            onSave={onSave}
+            isSaving={isSaving}
+            lastSaved={lastSaved}
+            hasUnsavedChanges={hasUnsavedChanges}
+          />
           <AddIncomeDialog 
             profiles={profiles}
             selectedMonth={selectedMonth}

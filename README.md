@@ -1,73 +1,97 @@
-# Welcome to your Lovable project
+# Meu Bolso Feliz 💰
 
-## Project info
+Aplicação de controle financeiro pessoal construída com React, TypeScript e Vite.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 📋 Pré-requisitos
 
-## How can I edit this code?
+- Node.js (versão 18 ou superior)
+- npm ou yarn
 
-There are several ways of editing your application.
+## 🚀 Como rodar localmente
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### 1. Clone o repositório
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone <URL_DO_SEU_REPOSITORIO>
+cd meu-bolso-feliz
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 2. Instale as dependências
 
-# Step 3: Install the necessary dependencies.
-npm i
+```sh
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+ou
+
+```sh
+yarn install
+```
+
+### 3. Inicie o servidor de desenvolvimento
+
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+ou
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```sh
+yarn dev
+```
 
-**Use GitHub Codespaces**
+A aplicação estará disponível em `http://localhost:8080`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📦 Scripts disponíveis
 
-## What technologies are used for this project?
+- `npm run dev` - Inicia o servidor de desenvolvimento
+- `npm run build` - Cria a build de produção
+- `npm run preview` - Visualiza a build de produção localmente
+- `npm run lint` - Executa o linter
 
-This project is built with:
+## 🛠️ Tecnologias utilizadas
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Vite** - Build tool e dev server
+- **React** - Biblioteca JavaScript para interfaces
+- **TypeScript** - Superset do JavaScript com tipagem estática
+- **Tailwind CSS** - Framework CSS utility-first
+- **shadcn/ui** - Componentes UI
+- **React Router** - Roteamento
+- **Recharts** - Gráficos e visualizações
+- **React Hook Form** - Gerenciamento de formulários
+- **Zod** - Validação de esquemas
 
-## How can I deploy this project?
+## 📁 Estrutura do projeto
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```
+meu-bolso-feliz/
+├── src/
+│   ├── components/     # Componentes reutilizáveis
+│   ├── pages/          # Páginas da aplicação
+│   ├── hooks/          # Custom hooks
+│   ├── lib/            # Utilitários
+│   ├── types/          # Tipos TypeScript
+│   └── data/           # Dados mock
+├── public/             # Arquivos estáticos
+└── dist/               # Build de produção (gerado)
+```
 
-## Can I connect a custom domain to my Lovable project?
+## 🚢 Deploy
 
-Yes, you can!
+Para fazer o build de produção:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```sh
+npm run build
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Os arquivos otimizados serão gerados na pasta `dist/`, que pode ser deployada em qualquer serviço de hospedagem estática como:
+
+- Vercel
+- Netlify
+- GitHub Pages
+- AWS S3
+- Cloudflare Pages
+
+## 📝 Licença
+
+Este projeto é privado e de uso pessoal.

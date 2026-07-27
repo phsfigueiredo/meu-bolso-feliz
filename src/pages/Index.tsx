@@ -12,6 +12,7 @@ import { DebtEndingsCard } from '@/components/DebtEndingsCard';
 import { ExpenseDueDateFilter, DueDateFilter } from '@/components/ExpenseDueDateFilter';
 import { ExpenseAlerts } from '@/components/ExpenseAlerts';
 import { CopyFromPreviousMonth } from '@/components/CopyFromPreviousMonth';
+import { ReplicatePreviousMonth } from '@/components/ReplicatePreviousMonth';
 import { EditExpenseDialog } from '@/components/EditExpenseDialog';
 import { EditIncomeDialog } from '@/components/EditIncomeDialog';
 import { DebtGroupManager } from '@/components/DebtGroupManager';
@@ -19,7 +20,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, List, TrendingUp, Heart } from 'lucide-react';
 import { Expense, Income, dueDayOrder } from '@/types/finance';
 
-const Index = () => {
+const Index = () => (
+  <PasswordGate>
+    <IndexContent />
+  </PasswordGate>
+);
+
+// Todo o conteúdo com useFinances fica aqui — só monta DEPOIS do unlock,
+// para que o seed criptografado tenha sido descriptografado e escrito no
+// IndexedDB antes do primeiro fetch de dados.
+const IndexContent = () => {
   const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>('all');
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
@@ -61,11 +71,16 @@ const Index = () => {
     hasDataInCurrentMonth,
     hasPreviousMonthData,
     copyFromPreviousMonth,
+    replicateFromPreviousMonth,
     debtGroups,
     addDebtGroup,
     editDebtGroup,
     deleteDebtGroup,
     expenseCountByGroup,
+    saveData,
+    isSaving,
+    lastSaved,
+    hasUnsavedChanges,
   } = useFinances();
 
   const filteredExpensesByDueDay = {
@@ -107,7 +122,6 @@ const Index = () => {
   };
 
   return (
-    <PasswordGate>
     <div className="min-h-screen bg-background">
       <Header
         profiles={profiles}
@@ -116,6 +130,10 @@ const Index = () => {
         debtGroups={debtGroups}
         onAddExpense={addExpense}
         onAddIncome={addIncome}
+        onSave={saveData}
+        isSaving={isSaving}
+        lastSaved={lastSaved}
+        hasUnsavedChanges={hasUnsavedChanges}
       />
 
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
@@ -136,12 +154,18 @@ const Index = () => {
           onDeleteProfile={deleteProfile}
         />
 
-        {/* Copy from previous month button */}
-        <CopyFromPreviousMonth
-          hasDataInCurrentMonth={hasDataInCurrentMonth}
-          hasPreviousMonthData={hasPreviousMonthData}
-          onCopy={copyFromPreviousMonth}
-        />
+        {/* Ações do mês anterior */}
+        <div className="flex flex-wrap items-center gap-2">
+          <CopyFromPreviousMonth
+            hasDataInCurrentMonth={hasDataInCurrentMonth}
+            hasPreviousMonthData={hasPreviousMonthData}
+            onCopy={copyFromPreviousMonth}
+          />
+          <ReplicatePreviousMonth
+            hasPreviousMonthData={hasPreviousMonthData}
+            onReplicate={replicateFromPreviousMonth}
+          />
+        </div>
 
         {/* Alerts for overdue and today expenses */}
         <ExpenseAlerts
@@ -249,7 +273,6 @@ const Index = () => {
         onSave={handleSaveIncome}
       />
     </div>
-    </PasswordGate>
   );
 };
 

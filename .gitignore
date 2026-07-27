@@ -7,10 +7,32 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build outputs
 dist
 dist-ssr
+
+# Generated files
 *.local
+*.zip
+
+# Env
+.env
+.env.local
+
+# SQLite (banco local persistente)
+server/data/*.db
+server/data/*.db-*
+
+# Seed plaintext (só o encriptado vai pro deploy)
+public/seed.json
+
+# Lock files (manter apenas package-lock.json se usar npm)
+bun.lockb
+yarn.lock
+pnpm-lock.yaml
 
 # Editor directories and files
 .vscode/*

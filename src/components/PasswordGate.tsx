@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, Eye, EyeOff } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Lock, Eye, EyeOff } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { fetchAndDecryptSeed } from '@/lib/crypto';
+import { initFromDecryptedSeed } from '@/lib/localStorage';
 
-const CORRECT_PASSWORD = "PedroeYasmim";
-const AUTH_KEY = "finance_app_authenticated";
+const AUTH_KEY = 'finance_app_authenticated';
 
 interface PasswordGateProps {
   children: React.ReactNode;
@@ -14,42 +15,52 @@ interface PasswordGateProps {
 
 const PasswordGate = ({ children }: PasswordGateProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
     const authenticated = localStorage.getItem(AUTH_KEY);
-    if (authenticated === "true") {
-      setIsAuthenticated(true);
-    }
+    if (authenticated === 'true') setIsAuthenticated(true);
     setIsLoading(false);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (password === CORRECT_PASSWORD) {
-      localStorage.setItem(AUTH_KEY, "true");
+    if (!password || isChecking) return;
+    setIsChecking(true);
+    try {
+      const decrypted = await fetchAndDecryptSeed(password);
+      const result = await initFromDecryptedSeed(decrypted);
+      localStorage.setItem(AUTH_KEY, 'true');
       setIsAuthenticated(true);
       toast({
-        title: "Bem-vindo!",
-        description: "Acesso liberado com sucesso.",
+        title: 'Bem-vindo!',
+        description:
+          result === 'seeded'
+            ? 'Base carregada a partir do seed criptografado.'
+            : 'Acesso liberado — usando dados já salvos no navegador.',
       });
-    } else {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       toast({
-        title: "Senha incorreta",
-        description: "Por favor, tente novamente.",
-        variant: "destructive",
+        title: msg === 'wrong-password' ? 'Senha incorreta' : 'Falha ao desbloquear',
+        description: msg === 'wrong-password'
+          ? 'Não foi possível descriptografar a base. Verifique a senha.'
+          : msg,
+        variant: 'destructive',
       });
-      setPassword("");
+      setPassword('');
+    } finally {
+      setIsChecking(false);
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem(AUTH_KEY);
     setIsAuthenticated(false);
-    setPassword("");
+    setPassword('');
   };
 
   if (isLoading) {
@@ -70,19 +81,20 @@ const PasswordGate = ({ children }: PasswordGateProps) => {
             </div>
             <CardTitle className="text-xl sm:text-2xl">Área Protegida</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Digite a senha para acessar o sistema financeiro
+              Digite a senha para descriptografar e acessar os dados
             </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="relative">
                 <Input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Digite a senha..."
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pr-10"
                   autoFocus
+                  disabled={isChecking}
                 />
                 <button
                   type="button"
@@ -92,8 +104,8 @@ const PasswordGate = ({ children }: PasswordGateProps) => {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <Button type="submit" className="w-full">
-                Entrar
+              <Button type="submit" className="w-full" disabled={isChecking}>
+                {isChecking ? 'Verificando...' : 'Entrar'}
               </Button>
             </form>
           </CardContent>

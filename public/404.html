@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Meu Bolso Feliz</title>
+    <script>
+      // GitHub Pages 404 → redireciona pra raiz do app mantendo o hash/query.
+      // Necessário porque GH Pages não conhece as rotas do SPA.
+      var segments = location.pathname.split('/').filter(Boolean);
+      var repo = segments[0] || '';
+      var rest = segments.slice(1).join('/');
+      location.replace('/' + repo + '/' + (rest ? '?p=/' + rest : '') + location.search + location.hash);
+    </script>
+  </head>
+  <body></body>
+</html>
