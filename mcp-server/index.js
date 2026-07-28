@@ -146,7 +146,7 @@ server.registerTool(
     const totalPending = expenses.filter((e) => e.status === 'nao_pago').reduce((s, r) => s + r.amount, 0);
     const byType = {};
     for (const e of expenses) byType[e.type] = (byType[e.type] ?? 0) + e.amount;
-    const byDueDay = { 10: 0, 15: 0, 30: 0 };
+    const byDueDay = { 15: 0, 20: 0, 30: 0 };
     for (const e of expenses) byDueDay[e.due_day] = (byDueDay[e.due_day] ?? 0) + e.amount;
     return ok({
       month, year, profileId: profileId ?? 'all',
@@ -236,7 +236,7 @@ const expenseInput = {
   name: z.string().min(1),
   type: z.enum(['cartao_credito', 'emprestimo', 'conta_fixa', 'aluguel', 'escola', 'outros']),
   amount: z.number().nonnegative(),
-  dueDay: z.union([z.literal(10), z.literal(15), z.literal(30)]),
+  dueDay: z.union([z.literal(15), z.literal(20), z.literal(30)]),
   paymentType: z.enum(['recorrente', 'parcelado']),
   paymentMethod: z.enum(['pix', 'boleto', 'debito_automatico', 'cartao', 'dinheiro', 'transferencia']).optional(),
   currentInstallment: z.number().int().optional(),
@@ -416,8 +416,8 @@ async function runTestSuite() {
     if (bad.length) throw new Error(`${bad.length} parcelamento(s) sem parcela nem data-fim`);
     return { inconsistent: 0 };
   });
-  t('due_day sempre em {10,15,30}', () => {
-    const bad = db.prepare(`SELECT id, due_day FROM expenses WHERE due_day NOT IN (10,15,30)`).all();
+  t('due_day sempre em {15,20,30}', () => {
+    const bad = db.prepare(`SELECT id, due_day FROM expenses WHERE due_day NOT IN (15,20,30)`).all();
     if (bad.length) throw new Error(`due_day inválido: ${bad.length} despesa(s)`);
     return { bad: 0 };
   });

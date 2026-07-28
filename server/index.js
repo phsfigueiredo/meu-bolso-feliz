@@ -355,7 +355,7 @@ app.get('/api/summary', (req, res) => {
   const byType = {};
   for (const e of expenses) byType[e.type] = (byType[e.type] ?? 0) + e.amount;
 
-  const byDueDay = { 10: 0, 15: 0, 30: 0 };
+  const byDueDay = { 15: 0, 20: 0, 30: 0 };
   for (const e of expenses) byDueDay[e.due_day] = (byDueDay[e.due_day] ?? 0) + e.amount;
 
   res.json({

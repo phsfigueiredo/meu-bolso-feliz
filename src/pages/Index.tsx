@@ -91,14 +91,14 @@ const IndexContent = () => {
   } = useFinances();
 
   const filteredExpensesByDueDay = {
-    10: expensesByDueDateStatus[dueDateFilter].filter((exp) => exp.dueDay === 10),
     15: expensesByDueDateStatus[dueDateFilter].filter((exp) => exp.dueDay === 15),
+    20: expensesByDueDateStatus[dueDateFilter].filter((exp) => exp.dueDay === 20),
     30: expensesByDueDateStatus[dueDateFilter].filter((exp) => exp.dueDay === 30),
   };
 
   const filteredTotalByDueDay = {
-    10: filteredExpensesByDueDay[10].reduce((sum, exp) => sum + exp.amount, 0),
     15: filteredExpensesByDueDay[15].reduce((sum, exp) => sum + exp.amount, 0),
+    20: filteredExpensesByDueDay[20].reduce((sum, exp) => sum + exp.amount, 0),
     30: filteredExpensesByDueDay[30].reduce((sum, exp) => sum + exp.amount, 0),
   };
 

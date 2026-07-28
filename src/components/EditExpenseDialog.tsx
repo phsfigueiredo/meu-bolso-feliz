@@ -20,7 +20,7 @@ export function EditExpenseDialog({ expense, profiles, debtGroups = [], open, on
   const [name, setName] = useState('');
   const [type, setType] = useState<ExpenseType>('outros');
   const [amount, setAmount] = useState('');
-  const [dueDay, setDueDay] = useState<'10' | '15' | '30'>('30');
+  const [dueDay, setDueDay] = useState<'15' | '20' | '30'>('30');
   const [paymentType, setPaymentType] = useState<PaymentType>('recorrente');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [totalInstallments, setTotalInstallments] = useState('');
@@ -34,7 +34,7 @@ export function EditExpenseDialog({ expense, profiles, debtGroups = [], open, on
       setName(expense.name);
       setType(expense.type);
       setAmount(expense.amount.toString());
-      setDueDay(expense.dueDay.toString() as '10' | '15' | '30');
+      setDueDay(expense.dueDay.toString() as '15' | '20' | '30');
       setPaymentType(expense.paymentType);
       setPaymentMethod(expense.paymentMethod || 'pix');
       setTotalInstallments(expense.totalInstallments?.toString() || '');
@@ -58,7 +58,7 @@ export function EditExpenseDialog({ expense, profiles, debtGroups = [], open, on
       name,
       type,
       amount: parsedAmount,
-      dueDay: parseInt(dueDay) as 10 | 15 | 30,
+      dueDay: parseInt(dueDay) as 15 | 20 | 30,
       paymentType,
       paymentMethod,
       profileId,
@@ -138,7 +138,7 @@ export function EditExpenseDialog({ expense, profiles, debtGroups = [], open, on
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Dia de Vencimento</Label>
-              <Select value={dueDay} onValueChange={(v) => setDueDay(v as '10' | '15' | '30')}>
+              <Select value={dueDay} onValueChange={(v) => setDueDay(v as '15' | '20' | '30')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

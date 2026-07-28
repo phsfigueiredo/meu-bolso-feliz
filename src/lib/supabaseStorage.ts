@@ -39,7 +39,7 @@ interface ExpenseRow {
   name: string;
   type: Expense['type'];
   amount: number;
-  due_day: 10 | 15 | 30;
+  due_day: 15 | 20 | 30;
   payment_type: Expense['paymentType'];
   payment_method: Expense['paymentMethod'] | null;
   current_installment: number | null;

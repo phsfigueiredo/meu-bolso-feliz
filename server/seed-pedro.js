@@ -10,11 +10,11 @@
  * - Parcela "YYYY-MM-DD…" → paymentType='parcelado' com endDate
  * - Parcela "-" → paymentType='recorrente' (default seguro)
  *
- * O schema atual só permite dueDay em {10,15,30}. Escolho:
- * - Recorrente + cartão / aluguel → 10
+ * O schema atual só permite dueDay em {15,20,30}. Escolho:
+ * - Recorrente + cartão / aluguel → 20
  * - Recorrente + conta_fixa       → 15
  * - Recorrente + outros/escola/emprestimo → 30
- * - Se veio data (endDate), uso: dia<=10 → 10; dia<=15 → 15; senão 30.
+ * - Se veio data (endDate), uso: dia<=15 → 15; dia<=20 → 20; senão 30.
  */
 import db, { tx } from './db.js';
 
@@ -287,12 +287,12 @@ function parseParcela(str) {
 function dueDayFor(type, parcelaInfo) {
   if (parcelaInfo.endDate) {
     const day = Number(parcelaInfo.endDate.slice(8, 10));
-    if (day <= 10) return 10;
     if (day <= 15) return 15;
+    if (day <= 20) return 20;
     return 30;
   }
   if (type === 'conta_fixa') return 15;
-  if (type === 'cartao_credito' || type === 'aluguel') return 10;
+  if (type === 'cartao_credito' || type === 'aluguel') return 20;
   return 30;
 }
 

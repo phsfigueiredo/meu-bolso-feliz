@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface GroupedExpenseListProps {
   title: string;
-  dueDay: 10 | 15 | 30;
+  dueDay: 15 | 20 | 30;
   expenses: Expense[];
   total: number;
   onToggleStatus: (id: string) => void;

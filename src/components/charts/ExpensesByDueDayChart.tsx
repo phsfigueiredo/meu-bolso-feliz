@@ -2,13 +2,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Toolti
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ExpensesByDueDayChartProps {
-  data: Record<10 | 15 | 30, number>;
+  data: Record<15 | 20 | 30, number>;
 }
 
 export function ExpensesByDueDayChart({ data }: ExpensesByDueDayChartProps) {
   const isMobile = useIsMobile();
   
-  // Ordem: 30, 10, 15 (1º, 2º, 3º pagamento do mês)
+  // Ordem: 30, 15, 20 (1º, 2º, 3º pagamento do mês)
   const chartData = [
     { name: '1º Pag. (Dia 30)', value: data[30], fill: 'hsl(var(--chart-1))' },
     { name: '2º Pag. (Dia 10)', value: data[10], fill: 'hsl(var(--chart-2))' },

@@ -19,7 +19,7 @@ interface DashboardProps {
   salaryCommitment: number;
   balance: number;
   expensesByType: Record<ExpenseType, number>;
-  totalByDueDay: Record<10 | 15 | 30, number>;
+  totalByDueDay: Record<15 | 20 | 30, number>;
 }
 
 export function Dashboard({
@@ -76,7 +76,7 @@ export function Dashboard({
         />
       </div>
 
-      {/* Secondary Stats - Ordem: 30, 10, 15 */}
+      {/* Secondary Stats - Ordem: 30, 15, 20 */}
       <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
         <StatCard
           title="Pendente"

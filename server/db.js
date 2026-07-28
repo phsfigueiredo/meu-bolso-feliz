@@ -42,7 +42,7 @@ db.exec(`
     name                 TEXT NOT NULL,
     type                 TEXT NOT NULL CHECK (type IN ('cartao_credito','emprestimo','conta_fixa','aluguel','escola','outros')),
     amount               REAL NOT NULL CHECK (amount >= 0),
-    due_day              INTEGER NOT NULL CHECK (due_day IN (10,15,30)),
+    due_day              INTEGER NOT NULL CHECK (due_day IN (15,20,30)),
     payment_type         TEXT NOT NULL CHECK (payment_type IN ('recorrente','parcelado')),
     payment_method       TEXT CHECK (payment_method IN ('pix','boleto','debito_automatico','cartao','dinheiro','transferencia')),
     current_installment  INTEGER,

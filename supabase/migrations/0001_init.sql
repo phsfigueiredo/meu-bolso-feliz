@@ -47,7 +47,7 @@ create table if not exists public.expenses (
   name                 text        not null,
   type                 text        not null check (type in ('cartao_credito','emprestimo','conta_fixa','aluguel','escola','outros')),
   amount               numeric     not null check (amount >= 0),
-  due_day              int         not null check (due_day in (10,15,30)),
+  due_day              int         not null check (due_day in (15,20,30)),
   payment_type         text        not null check (payment_type in ('recorrente','parcelado')),
   payment_method       text        check (payment_method in ('pix','boleto','debito_automatico','cartao','dinheiro','transferencia')),
   current_installment  int,

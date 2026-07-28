@@ -20,7 +20,7 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGr
   const [name, setName] = useState('');
   const [type, setType] = useState<ExpenseType>('outros');
   const [amount, setAmount] = useState('');
-  const [dueDay, setDueDay] = useState<'10' | '15' | '30'>('30');
+  const [dueDay, setDueDay] = useState<'15' | '20' | '30'>('30');
   const [paymentType, setPaymentType] = useState<PaymentType>('recorrente');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [totalInstallments, setTotalInstallments] = useState('');
@@ -40,7 +40,7 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGr
       name,
       type,
       amount: parsedAmount,
-      dueDay: parseInt(dueDay) as 10 | 15 | 30,
+      dueDay: parseInt(dueDay) as 15 | 20 | 30,
       paymentType,
       paymentMethod,
       status: 'nao_pago',
@@ -146,7 +146,7 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGr
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Dia de Vencimento</Label>
-              <Select value={dueDay} onValueChange={(v) => setDueDay(v as '10' | '15' | '30')}>
+              <Select value={dueDay} onValueChange={(v) => setDueDay(v as '15' | '20' | '30')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

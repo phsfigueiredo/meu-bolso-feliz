@@ -17,7 +17,7 @@ export interface Expense {
   name: string;
   type: ExpenseType;
   amount: number;
-  dueDay: 10 | 15 | 30;
+  dueDay: 15 | 20 | 30;
   paymentType: PaymentType;
   paymentMethod?: PaymentMethod;
   currentInstallment?: number;
@@ -34,12 +34,12 @@ export interface Expense {
 }
 
 // Ordem dos dias de pagamento (primeiro pagamento do mês é dia 30)
-export const dueDayOrder: (10 | 15 | 30)[] = [30, 10, 15];
+export const dueDayOrder: (15 | 20 | 30)[] = [30, 15, 20];
 
-export const dueDayLabels: Record<10 | 15 | 30, string> = {
+export const dueDayLabels: Record<15 | 20 | 30, string> = {
   30: '1º Pagamento (Dia 30)',
-  10: '2º Pagamento (Dia 10)',
-  15: '3º Pagamento (Dia 15)',
+  15: '2º Pagamento (Dia 15)',
+  20: '3º Pagamento (Dia 20)',
 };
 
 export type IncomeType = 'salario' | 'beneficio' | 'freelance' | 'investimento' | 'outros';

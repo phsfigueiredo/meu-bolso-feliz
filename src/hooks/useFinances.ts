@@ -90,8 +90,8 @@ export function useFinances() {
   const balance = useMemo(() => totalIncome - totalExpenses, [totalIncome, totalExpenses]);
 
   const expensesByDueDay = useMemo(() => ({
-    10: filteredExpenses.filter((e) => e.dueDay === 10),
     15: filteredExpenses.filter((e) => e.dueDay === 15),
+    20: filteredExpenses.filter((e) => e.dueDay === 20),
     30: filteredExpenses.filter((e) => e.dueDay === 30),
   }), [filteredExpenses]);
 
@@ -141,8 +141,8 @@ export function useFinances() {
   }, [filteredExpenses, selectedMonth, selectedYear]);
 
   const totalByDueDay = useMemo(() => ({
-    10: expensesByDueDay[10].reduce((s, e) => s + e.amount, 0),
     15: expensesByDueDay[15].reduce((s, e) => s + e.amount, 0),
+    20: expensesByDueDay[20].reduce((s, e) => s + e.amount, 0),
     30: expensesByDueDay[30].reduce((s, e) => s + e.amount, 0),
   }), [expensesByDueDay]);
 
