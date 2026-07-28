@@ -11,8 +11,9 @@ export function useFinances() {
   const [debtGroups, setDebtGroups] = useState<string[]>([]);
 
   const [selectedProfileId, setSelectedProfileId] = useState<string | 'all'>('all');
-  const [selectedMonth, setSelectedMonth] = useState(1);
-  const [selectedYear, setSelectedYear] = useState(2026);
+  // Padrão: mês/ano corrente (a UI arranca já no período atual)
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
