@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Wallet, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { FamilyProfile, Expense, Income } from '@/types/finance';
+import { FamilyProfile, Expense, Income, ExpenseCategory } from '@/types/finance';
 import { AddExpenseDialog } from './AddExpenseDialog';
 import { AddIncomeDialog } from './AddIncomeDialog';
 import { SaveButton } from './SaveButton';
+import { ThemeToggle } from './ThemeToggle';
 import { months } from '@/types/finance';
 
 interface HeaderProps {
@@ -13,6 +14,7 @@ interface HeaderProps {
   selectedMonth: number;
   selectedYear: number;
   debtGroups?: string[];
+  categories?: ExpenseCategory[];
   onAddExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
   onAddIncome: (income: Omit<Income, 'id' | 'createdAt'>) => void;
   onSave: () => boolean;
@@ -21,12 +23,13 @@ interface HeaderProps {
   hasUnsavedChanges: boolean;
 }
 
-export function Header({ 
-  profiles, 
-  selectedMonth, 
+export function Header({
+  profiles,
+  selectedMonth,
   selectedYear,
   debtGroups = [],
-  onAddExpense, 
+  categories = [],
+  onAddExpense,
   onAddIncome,
   onSave,
   isSaving,
@@ -69,6 +72,7 @@ export function Header({
             <Calendar className="h-3 w-3" />
             <span>{todayShort}</span>
           </div>
+          <ThemeToggle />
           <SaveButton
             onSave={onSave}
             isSaving={isSaving}
@@ -81,11 +85,12 @@ export function Header({
             selectedYear={selectedYear}
             onAdd={onAddIncome}
           />
-          <AddExpenseDialog 
+          <AddExpenseDialog
             profiles={profiles}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             debtGroups={debtGroups}
+            categories={categories}
             onAdd={onAddExpense}
           />
         </div>

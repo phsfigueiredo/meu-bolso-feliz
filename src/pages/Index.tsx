@@ -15,9 +15,11 @@ import { ExpenseDueDateFilter, DueDateFilter } from '@/components/ExpenseDueDate
 import { ExpenseAlerts } from '@/components/ExpenseAlerts';
 import { CopyFromPreviousMonth } from '@/components/CopyFromPreviousMonth';
 import { ReplicatePreviousMonth } from '@/components/ReplicatePreviousMonth';
+import { MonthProgressBar } from '@/components/MonthProgressBar';
 import { EditExpenseDialog } from '@/components/EditExpenseDialog';
 import { EditIncomeDialog } from '@/components/EditIncomeDialog';
 import { DebtGroupManager } from '@/components/DebtGroupManager';
+import { CategoryManager } from '@/components/CategoryManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, List, TrendingUp, Heart } from 'lucide-react';
 import { Expense, Income, dueDayOrder } from '@/types/finance';
@@ -75,6 +77,7 @@ const IndexContent = () => {
     updateIncome,
     addProfile,
     deleteProfile,
+    countsByProfile,
     hasDataInCurrentMonth,
     hasPreviousMonthData,
     copyFromPreviousMonth,
@@ -84,6 +87,10 @@ const IndexContent = () => {
     editDebtGroup,
     deleteDebtGroup,
     expenseCountByGroup,
+    categories,
+    addCategory,
+    updateCategory,
+    deleteCategory,
     saveData,
     isSaving,
     lastSaved,
@@ -148,6 +155,7 @@ const IndexContent = () => {
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
         debtGroups={debtGroups}
+        categories={categories}
         onAddExpense={addExpense}
         onAddIncome={addIncome}
         onSave={saveData}
@@ -172,6 +180,7 @@ const IndexContent = () => {
           onSelectProfile={setSelectedProfileId}
           onAddProfile={addProfile}
           onDeleteProfile={deleteProfile}
+          countsByProfile={countsByProfile}
         />
 
         {/* Ações do mês anterior */}
@@ -186,6 +195,14 @@ const IndexContent = () => {
             onReplicate={replicateFromPreviousMonth}
           />
         </div>
+
+        {/* Progresso mensal */}
+        <MonthProgressBar
+          totalIncome={totalIncome}
+          totalExpenses={totalExpenses}
+          totalPaid={totalPaid}
+          totalPending={totalPending}
+        />
 
         {/* Alerts for overdue and today expenses */}
         <ExpenseAlerts
@@ -233,13 +250,21 @@ const IndexContent = () => {
                 onFilterChange={setDueDateFilter}
                 counts={dueDateCounts}
               />
-              <DebtGroupManager
-                groups={debtGroups}
-                onAddGroup={addDebtGroup}
-                onEditGroup={editDebtGroup}
-                onDeleteGroup={deleteDebtGroup}
-                expenseCountByGroup={expenseCountByGroup}
-              />
+              <div className="flex items-center gap-2">
+                <CategoryManager
+                  categories={categories}
+                  onAdd={addCategory}
+                  onUpdate={updateCategory}
+                  onDelete={deleteCategory}
+                />
+                <DebtGroupManager
+                  groups={debtGroups}
+                  onAddGroup={addDebtGroup}
+                  onEditGroup={editDebtGroup}
+                  onDeleteGroup={deleteDebtGroup}
+                  expenseCountByGroup={expenseCountByGroup}
+                />
+              </div>
             </div>
             
             <div className="space-y-8">

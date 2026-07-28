@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, CreditCard, Home, GraduationCap, Banknote, Receipt, MoreHorizontal, Trash2, Pencil } from 'lucide-react';
+import { DueSemaphore } from './DueSemaphore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +69,7 @@ export function ExpenseCard({ expense, onToggleStatus, onDelete, onEdit }: Expen
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
+              <DueSemaphore expense={expense} />
               <h3 className={cn('font-semibold text-sm truncate', isPaid && 'line-through opacity-70')}>
                 {expense.name}
               </h3>
@@ -79,6 +81,12 @@ export function ExpenseCard({ expense, onToggleStatus, onDelete, onEdit }: Expen
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               {expenseTypeLabels[expense.type]} • Dia {expense.dueDay}
+              {expense.category && (
+                <>
+                  {' • '}
+                  <span className="font-medium">{expense.category}</span>
+                </>
+              )}
             </p>
           </div>
           <div className="text-right shrink-0">
@@ -169,6 +177,7 @@ export function ExpenseCard({ expense, onToggleStatus, onDelete, onEdit }: Expen
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
+            <DueSemaphore expense={expense} />
             <h3 className={cn('font-semibold truncate', isPaid && 'line-through opacity-70')}>
               {expense.name}
             </h3>
@@ -181,6 +190,12 @@ export function ExpenseCard({ expense, onToggleStatus, onDelete, onEdit }: Expen
           <p className="text-sm text-muted-foreground">
             {expenseTypeLabels[expense.type]} • Vence dia {expense.dueDay}
             {expense.paymentMethod && ` • ${paymentMethodLabels[expense.paymentMethod]}`}
+            {expense.category && (
+              <>
+                {' • '}
+                <span className="font-medium text-foreground">{expense.category}</span>
+              </>
+            )}
           </p>
         </div>
 

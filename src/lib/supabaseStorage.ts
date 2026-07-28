@@ -6,7 +6,7 @@
  * auth.uid()). O `user_id` é preenchido pelo DEFAULT auth.uid() no insert.
  */
 import { supabase } from './supabase';
-import type { Expense, Income, FamilyProfile } from '@/types/finance';
+import type { Expense, Income, FamilyProfile, ExpenseCategory } from '@/types/finance';
 import type { FullState } from './api';
 
 function client() {
@@ -52,6 +52,7 @@ interface ExpenseRow {
   month: number;
   year: number;
   group_name: string | null;
+  category: string | null;
   created_at: string;
 }
 
@@ -79,6 +80,7 @@ const toExpense = (r: ExpenseRow): Expense => ({
   month: r.month,
   year: r.year,
   groupName: r.group_name ?? undefined,
+  category: r.category ?? undefined,
   createdAt: r.created_at,
 });
 
@@ -100,6 +102,7 @@ const expenseToRow = (e: Partial<Expense>) => ({
   month: e.month,
   year: e.year,
   group_name: e.groupName ?? null,
+  category: e.category ?? null,
 });
 
 const incomeToRow = (i: Partial<Income>) => ({
@@ -131,19 +134,56 @@ export const supabaseApi = {
 
   async getState(): Promise<FullState> {
     const c = client();
-    const [profiles, incomes, expenses, groups] = await Promise.all([
+    const [profiles, incomes, expenses, groups, cats] = await Promise.all([
       c.from('profiles').select('*').order('name'),
       c.from('incomes').select('*'),
       c.from('expenses').select('*').order('year').order('month'),
       c.from('debt_groups').select('name').order('name'),
+      c.from('expense_categories').select('name, color, icon').order('name'),
     ]);
     return {
       profiles: throwIfError(profiles as { data: ProfileRow[]; error: unknown }).map(toProfile),
       incomes:  throwIfError(incomes  as { data: IncomeRow[];  error: unknown }).map(toIncome),
       expenses: throwIfError(expenses as { data: ExpenseRow[]; error: unknown }).map(toExpense),
       debtGroups: throwIfError(groups as { data: { name: string }[]; error: unknown }).map(g => g.name),
+      categories: throwIfError(cats as { data: ExpenseCategory[]; error: unknown }),
       lastSaved: null,
     };
+  },
+
+  async addCategory(cat: ExpenseCategory): Promise<ExpenseCategory> {
+    const { error } = await client().from('expense_categories').insert({
+      name: cat.name, color: cat.color, icon: cat.icon ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return cat;
+  },
+
+  async updateCategory(name: string, patch: Partial<ExpenseCategory>): Promise<void> {
+    // Postgres não deixa update de PK direto; se muda o nome, tem que migrar
+    const c = client();
+    if (patch.name && patch.name !== name) {
+      const { error: eIns } = await c.from('expense_categories').insert({
+        name: patch.name, color: patch.color ?? 'hsl(var(--muted-foreground))', icon: patch.icon ?? null,
+      });
+      if (eIns && !eIns.message.includes('duplicate')) throw new Error(eIns.message);
+      await c.from('expenses').update({ category: patch.name }).eq('category', name);
+      const { error: eDel } = await c.from('expense_categories').delete().eq('name', name);
+      if (eDel) throw new Error(eDel.message);
+    } else {
+      const update: Record<string, unknown> = {};
+      if (patch.color !== undefined) update.color = patch.color;
+      if (patch.icon !== undefined) update.icon = patch.icon;
+      const { error } = await c.from('expense_categories').update(update).eq('name', name);
+      if (error) throw new Error(error.message);
+    }
+  },
+
+  async deleteCategory(name: string): Promise<void> {
+    const c = client();
+    await c.from('expenses').update({ category: null }).eq('category', name);
+    const { error } = await c.from('expense_categories').delete().eq('name', name);
+    if (error) throw new Error(error.message);
   },
 
   async markSaved() {

@@ -6,13 +6,14 @@
  * elas sem se preocupar com o transporte.
  */
 import { get, set } from 'idb-keyval';
-import type { Expense, Income, FamilyProfile } from '@/types/finance';
+import type { Expense, Income, FamilyProfile, ExpenseCategory } from '@/types/finance';
 import type { FullState } from './api';
 
 const KEY = 'meu-bolso-feliz:state';
 
 interface StateShape extends FullState {
   version: number;
+  categories: ExpenseCategory[];
 }
 
 const empty = (): StateShape => ({
@@ -21,6 +22,7 @@ const empty = (): StateShape => ({
   incomes: [],
   expenses: [],
   debtGroups: [],
+  categories: [],
   lastSaved: null,
 });
 
@@ -85,8 +87,35 @@ export const localApi = {
       incomes: s.incomes,
       expenses: s.expenses,
       debtGroups: s.debtGroups,
+      categories: s.categories ?? [],
       lastSaved: s.lastSaved,
     };
+  },
+
+  async addCategory(cat: ExpenseCategory): Promise<ExpenseCategory> {
+    const s = await load();
+    const cats = s.categories ?? [];
+    if (cats.some((c) => c.name === cat.name)) return cat;
+    await commit({ ...s, categories: [...cats, cat] });
+    return cat;
+  },
+
+  async updateCategory(name: string, patch: Partial<ExpenseCategory>): Promise<void> {
+    const s = await load();
+    const cats = s.categories ?? [];
+    const newName = patch.name ?? name;
+    const nextCats = cats.map((c) => (c.name === name ? { ...c, ...patch, name: newName } : c));
+    const nextExpenses = newName !== name
+      ? s.expenses.map((e) => (e.category === name ? { ...e, category: newName } : e))
+      : s.expenses;
+    await commit({ ...s, categories: nextCats, expenses: nextExpenses });
+  },
+
+  async deleteCategory(name: string): Promise<void> {
+    const s = await load();
+    const cats = (s.categories ?? []).filter((c) => c.name !== name);
+    const expenses = s.expenses.map((e) => (e.category === name ? { ...e, category: undefined } : e));
+    await commit({ ...s, categories: cats, expenses });
   },
 
   async markSaved() {

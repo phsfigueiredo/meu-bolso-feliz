@@ -37,6 +37,7 @@ interface ProfileSelectorProps {
   onSelectProfile: (id: string | 'all') => void;
   onAddProfile: (profile: Omit<FamilyProfile, 'id'>) => void;
   onDeleteProfile: (id: string) => void;
+  countsByProfile: Record<string, { expenses: number; incomes: number }>;
 }
 
 export function ProfileSelector({
@@ -45,7 +46,9 @@ export function ProfileSelector({
   onSelectProfile,
   onAddProfile,
   onDeleteProfile,
+  countsByProfile,
 }: ProfileSelectorProps) {
+  const isLastProfile = profiles.length <= 1;
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<FamilyProfile['type']>('outro');
@@ -100,27 +103,56 @@ export function ProfileSelector({
             {profile.name}
           </button>
           
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Trash2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Excluir perfil?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Isso irá excluir o perfil "{profile.name}" e todas as suas despesas e receitas associadas.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDeleteProfile(profile.id)}>
-                  Excluir
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {isLastProfile ? (
+            <button
+              disabled
+              title="Não é possível excluir o último perfil"
+              className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-muted text-muted-foreground opacity-0 group-hover:opacity-70 transition-opacity flex items-center justify-center cursor-not-allowed"
+            >
+              <Trash2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+            </button>
+          ) : (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Trash2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir perfil "{profile.name}"?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {(() => {
+                      const c = countsByProfile[profile.id] ?? { expenses: 0, incomes: 0 };
+                      if (c.expenses === 0 && c.incomes === 0) {
+                        return 'Este perfil não tem despesas nem receitas. Ação irreversível.';
+                      }
+                      const parts: string[] = [];
+                      if (c.expenses > 0) parts.push(`${c.expenses} despesa(s)`);
+                      if (c.incomes > 0) parts.push(`${c.incomes} receita(s)`);
+                      return (
+                        <>
+                          Isso vai apagar <strong>permanentemente</strong> o perfil e também{' '}
+                          <strong className="text-destructive">{parts.join(' e ')}</strong> em cascata.
+                          <br /><br />
+                          Ação <strong>irreversível</strong>. Tem certeza?
+                        </>
+                      );
+                    })()}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => onDeleteProfile(profile.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Sim, apagar tudo
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       ))}
 

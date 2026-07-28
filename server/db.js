@@ -55,13 +55,20 @@ db.exec(`
     profile_id           TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     month                INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12),
     year                 INTEGER NOT NULL,
-    group_name           TEXT
+    group_name           TEXT,
+    category             TEXT
   );
   CREATE INDEX IF NOT EXISTS idx_expenses_period ON expenses(year, month, profile_id);
   CREATE INDEX IF NOT EXISTS idx_expenses_group  ON expenses(group_name);
 
   CREATE TABLE IF NOT EXISTS debt_groups (
     name TEXT PRIMARY KEY
+  );
+
+  CREATE TABLE IF NOT EXISTS expense_categories (
+    name  TEXT PRIMARY KEY,
+    color TEXT NOT NULL DEFAULT 'hsl(var(--muted-foreground))',
+    icon  TEXT
   );
 
   CREATE TABLE IF NOT EXISTS meta (
@@ -114,6 +121,7 @@ export function rowToExpense(r) {
     month: r.month,
     year: r.year,
     groupName: r.group_name ?? undefined,
+    category: r.category ?? undefined,
   };
 }
 

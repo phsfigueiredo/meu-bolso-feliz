@@ -1,4 +1,4 @@
-import type { Expense, Income, FamilyProfile } from '@/types/finance';
+import type { Expense, Income, FamilyProfile, ExpenseCategory } from '@/types/finance';
 
 const API_BASE =
   (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3001';
@@ -25,6 +25,7 @@ export interface FullState {
   incomes: Income[];
   expenses: Expense[];
   debtGroups: string[];
+  categories?: ExpenseCategory[];
   lastSaved: string | null;
 }
 
@@ -77,6 +78,15 @@ export const api = {
     req<{ copiedExpenses: number; copiedIncomes: number }>('/api/copy-previous-month', {
       method: 'POST', body: JSON.stringify({ month, year, profileId }),
     }),
+
+  addCategory: (cat: ExpenseCategory) =>
+    req<ExpenseCategory>('/api/categories', { method: 'POST', body: JSON.stringify(cat) }),
+  updateCategory: (name: string, patch: Partial<ExpenseCategory>) =>
+    req<void>(`/api/categories/${encodeURIComponent(name)}`, {
+      method: 'PUT', body: JSON.stringify(patch),
+    }),
+  deleteCategory: (name: string) =>
+    req<void>(`/api/categories/${encodeURIComponent(name)}`, { method: 'DELETE' }),
 
   replicatePreviousMonth: (month: number, year: number, profileId: string | 'all') =>
     req<{ inserted: number; skipped: number; source: { month: number; year: number } }>(

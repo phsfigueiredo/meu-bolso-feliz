@@ -5,17 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Folder } from 'lucide-react';
-import { Expense, ExpenseType, PaymentType, PaymentMethod, FamilyProfile, expenseTypeLabels, paymentMethodLabels, dueDayOrder, dueDayLabels } from '@/types/finance';
+import { Expense, ExpenseType, PaymentType, PaymentMethod, FamilyProfile, ExpenseCategory, expenseTypeLabels, paymentMethodLabels, dueDayOrder, dueDayLabels } from '@/types/finance';
 
 interface AddExpenseDialogProps {
   profiles: FamilyProfile[];
   selectedMonth: number;
   selectedYear: number;
   debtGroups?: string[];
+  categories?: ExpenseCategory[];
   onAdd: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
 }
 
-export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGroups = [], onAdd }: AddExpenseDialogProps) {
+export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGroups = [], categories = [], onAdd }: AddExpenseDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<ExpenseType>('outros');
@@ -28,6 +29,8 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGr
   const [profileId, setProfileId] = useState(profiles[0]?.id || '');
   const [endDate, setEndDate] = useState('');
   const [groupName, setGroupName] = useState('');
+  const [category, setCategory] = useState('');
+  const [repeatMonths, setRepeatMonths] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,28 +39,50 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGr
 
     if (!name || isNaN(parsedAmount) || !profileId) return;
 
-    const expense: Omit<Expense, 'id' | 'createdAt'> = {
-      name,
-      type,
-      amount: parsedAmount,
-      dueDay: parseInt(dueDay) as 15 | 20 | 30,
-      paymentType,
-      paymentMethod,
-      status: 'nao_pago',
-      totalPaid: 0,
-      totalRemaining: parsedAmount,
-      profileId,
-      month: selectedMonth,
-      year: selectedYear,
-      groupName: groupName || undefined,
-      ...(paymentType === 'parcelado' && {
-        currentInstallment: parseInt(currentInstallment) || 1,
-        totalInstallments: parseInt(totalInstallments) || 12,
-        endDate: endDate || undefined,
-      }),
-    };
+    // repeatMonths = quantos MESES ADICIONAIS além do atual.
+    // Ex: 2 → cria a despesa em selectedMonth + em (selectedMonth+1) + (selectedMonth+2)
+    const extra = Math.max(0, parseInt(repeatMonths) || 0);
+    const baseInstallment = paymentType === 'parcelado' ? (parseInt(currentInstallment) || 1) : undefined;
+    const totalInst = paymentType === 'parcelado' ? (parseInt(totalInstallments) || 12) : undefined;
 
-    onAdd(expense);
+    for (let offset = 0; offset <= extra; offset++) {
+      // Deslocamento mês/ano para propagar
+      let m = selectedMonth + offset;
+      let y = selectedYear;
+      while (m > 12) { m -= 12; y += 1; }
+
+      // Se parcelado, incrementa parcela em cada cópia
+      const currentInst = baseInstallment !== undefined ? baseInstallment + offset : undefined;
+      if (paymentType === 'parcelado' && totalInst !== undefined && currentInst !== undefined && currentInst > totalInst) {
+        // ultrapassa o total de parcelas → não cria mais
+        break;
+      }
+
+      const expense: Omit<Expense, 'id' | 'createdAt'> = {
+        name,
+        type,
+        amount: parsedAmount,
+        dueDay: parseInt(dueDay) as 15 | 20 | 30,
+        paymentType,
+        paymentMethod,
+        status: 'nao_pago',
+        totalPaid: 0,
+        totalRemaining: parsedAmount,
+        profileId,
+        month: m,
+        year: y,
+        groupName: groupName || undefined,
+        category: category || undefined,
+        ...(paymentType === 'parcelado' && {
+          currentInstallment: currentInst,
+          totalInstallments: totalInst,
+          endDate: endDate || undefined,
+        }),
+      };
+
+      onAdd(expense);
+    }
+
     setOpen(false);
     resetForm();
   };
@@ -74,6 +99,8 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGr
     setProfileId(profiles[0]?.id || '');
     setEndDate('');
     setGroupName('');
+    setCategory('');
+    setRepeatMonths('');
   };
 
   return (
@@ -177,24 +204,49 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGr
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Folder className="h-4 w-4" />
-              Grupo de Dívida (opcional)
-            </Label>
-            <Select value={groupName || "__none__"} onValueChange={(v) => setGroupName(v === "__none__" ? "" : v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione ou deixe vazio" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">Sem grupo</SelectItem>
-                {debtGroups.map((group) => (
-                  <SelectItem key={group} value={group}>
-                    {group}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Folder className="h-4 w-4" />
+                Grupo (opcional)
+              </Label>
+              <Select value={groupName || "__none__"} onValueChange={(v) => setGroupName(v === "__none__" ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sem grupo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem grupo</SelectItem>
+                  {debtGroups.map((group) => (
+                    <SelectItem key={group} value={group}>
+                      {group}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Categoria (opcional)</Label>
+              <Select value={category || "__none__"} onValueChange={(v) => setCategory(v === "__none__" ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sem categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem categoria</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.name} value={c.name}>
+                      <span className="inline-flex items-center gap-2">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full inline-block"
+                          style={{ backgroundColor: c.color }}
+                        />
+                        {c.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -208,6 +260,22 @@ export function AddExpenseDialog({ profiles, selectedMonth, selectedYear, debtGr
                 <SelectItem value="parcelado">Parcelado</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="repeat">Repetir também nos próximos meses (opcional)</Label>
+            <Input
+              id="repeat"
+              type="number"
+              min="0"
+              max="24"
+              value={repeatMonths}
+              onChange={(e) => setRepeatMonths(e.target.value)}
+              placeholder="Ex: 5 = cria também nos 5 meses seguintes"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Deixe vazio para criar só no mês atual. Se parcelado, a parcela é incrementada em cada cópia e para automaticamente ao atingir o total.
+            </p>
           </div>
 
           {paymentType === 'parcelado' && (

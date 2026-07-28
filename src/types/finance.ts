@@ -31,6 +31,13 @@ export interface Expense {
   month: number;
   year: number;
   groupName?: string;
+  category?: string; // categoria/tag customizada (nome, ver expenseCategories)
+}
+
+export interface ExpenseCategory {
+  name: string;
+  color: string;
+  icon?: string;
 }
 
 // Ordem dos dias de pagamento (primeiro pagamento do mês é dia 30)

@@ -22,11 +22,53 @@ app.get('/api/state', (_req, res) => {
   const incomes  = db.prepare('SELECT * FROM incomes').all().map(rowToIncome);
   const expenses = db.prepare('SELECT * FROM expenses').all().map(rowToExpense);
   const debtGroups = db.prepare('SELECT name FROM debt_groups ORDER BY name').all().map(r => r.name);
+  const categories = db.prepare('SELECT name, color, icon FROM expense_categories ORDER BY name').all()
+    .map(r => ({ name: r.name, color: r.color, icon: r.icon ?? undefined }));
   const lastSaveRow = db.prepare("SELECT value FROM meta WHERE key='last_save'").get();
   res.json({
-    profiles, incomes, expenses, debtGroups,
+    profiles, incomes, expenses, debtGroups, categories,
     lastSaved: lastSaveRow?.value ?? null,
   });
+});
+
+app.post('/api/categories', (req, res) => {
+  const { name, color, icon } = req.body || {};
+  if (!name || !color) return res.status(400).json({ error: 'name and color required' });
+  db.prepare('INSERT INTO expense_categories (name, color, icon) VALUES (?,?,?) ON CONFLICT(name) DO NOTHING')
+    .run(name, color, icon ?? null);
+  res.status(201).json({ name, color, icon: icon ?? undefined });
+});
+
+app.put('/api/categories/:name', (req, res) => {
+  const oldName = req.params.name;
+  const b = req.body || {};
+  const newName = b.name ?? oldName;
+  tx(() => {
+    if (newName !== oldName) {
+      db.prepare('INSERT INTO expense_categories (name,color,icon) VALUES (?,?,?) ON CONFLICT DO NOTHING')
+        .run(newName, b.color ?? 'hsl(var(--muted-foreground))', b.icon ?? null);
+      db.prepare('UPDATE expenses SET category=? WHERE category=?').run(newName, oldName);
+      db.prepare('DELETE FROM expense_categories WHERE name=?').run(oldName);
+    } else {
+      const parts = [];
+      const params = [];
+      if (b.color !== undefined) { parts.push('color=?'); params.push(b.color); }
+      if (b.icon !== undefined)  { parts.push('icon=?');  params.push(b.icon ?? null); }
+      if (parts.length) {
+        params.push(oldName);
+        db.prepare(`UPDATE expense_categories SET ${parts.join(', ')} WHERE name=?`).run(...params);
+      }
+    }
+  });
+  res.status(204).end();
+});
+
+app.delete('/api/categories/:name', (req, res) => {
+  tx(() => {
+    db.prepare('UPDATE expenses SET category=NULL WHERE category=?').run(req.params.name);
+    db.prepare('DELETE FROM expense_categories WHERE name=?').run(req.params.name);
+  });
+  res.status(204).end();
 });
 
 app.post('/api/state/save', (_req, res) => {
@@ -118,16 +160,33 @@ app.get('/api/expenses', (req, res) => {
   res.json(db.prepare(sql).all(...params).map(rowToExpense));
 });
 
+function upsertExpenseValues(id, b, createdAt) {
+  return {
+    id, name: b.name, type: b.type, amount: Number(b.amount), due_day: Number(b.dueDay),
+    payment_type: b.paymentType, payment_method: b.paymentMethod ?? null,
+    current_installment: b.currentInstallment ?? null,
+    total_installments: b.totalInstallments ?? null,
+    end_date: b.endDate ?? null,
+    status: b.status ?? 'nao_pago',
+    total_paid: Number(b.totalPaid ?? 0),
+    total_remaining: Number(b.totalRemaining ?? b.amount ?? 0),
+    created_at: createdAt,
+    profile_id: b.profileId, month: Number(b.month), year: Number(b.year),
+    group_name: b.groupName ?? null,
+    category: b.category ?? null,
+  };
+}
+
 function upsertExpense(id, b, createdAt) {
   db.prepare(`
     INSERT INTO expenses (
       id, name, type, amount, due_day, payment_type, payment_method,
       current_installment, total_installments, end_date, status,
-      total_paid, total_remaining, created_at, profile_id, month, year, group_name
+      total_paid, total_remaining, created_at, profile_id, month, year, group_name, category
     ) VALUES (
       @id, @name, @type, @amount, @due_day, @payment_type, @payment_method,
       @current_installment, @total_installments, @end_date, @status,
-      @total_paid, @total_remaining, @created_at, @profile_id, @month, @year, @group_name
+      @total_paid, @total_remaining, @created_at, @profile_id, @month, @year, @group_name, @category
     )
   `).run({
     id, name: b.name, type: b.type, amount: Number(b.amount), due_day: Number(b.dueDay),
@@ -141,6 +200,7 @@ function upsertExpense(id, b, createdAt) {
     created_at: createdAt,
     profile_id: b.profileId, month: Number(b.month), year: Number(b.year),
     group_name: b.groupName ?? null,
+    category: b.category ?? null,
   });
 }
 
@@ -167,7 +227,7 @@ app.put('/api/expenses/:id', (req, res) => {
       current_installment=@current_installment, total_installments=@total_installments,
       end_date=@end_date, status=@status, total_paid=@total_paid,
       total_remaining=@total_remaining, profile_id=@profile_id,
-      month=@month, year=@year, group_name=@group_name
+      month=@month, year=@year, group_name=@group_name, category=@category
     WHERE id=@id
   `).run({
     id: req.params.id,
@@ -181,6 +241,7 @@ app.put('/api/expenses/:id', (req, res) => {
     total_remaining: Number(b.totalRemaining ?? 0),
     profile_id: b.profileId, month: Number(b.month), year: Number(b.year),
     group_name: b.groupName ?? null,
+    category: b.category ?? null,
   });
   res.json(rowToExpense(db.prepare('SELECT * FROM expenses WHERE id=?').get(req.params.id)));
 });

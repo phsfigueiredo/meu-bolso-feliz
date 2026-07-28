@@ -15,7 +15,7 @@ import { api, type FullState } from './api';
 import { localApi } from './localStorage';
 import { supabaseApi } from './supabaseStorage';
 import { isSupabaseConfigured } from './supabase';
-import type { Expense, Income, FamilyProfile } from '@/types/finance';
+import type { Expense, Income, FamilyProfile, ExpenseCategory } from '@/types/finance';
 
 type Backend = 'supabase' | 'api' | 'local';
 
@@ -104,6 +104,17 @@ export const storage = {
       () => api.replicatePreviousMonth(m, y, p),
       () => localApi.replicatePreviousMonth(m, y, p),
     ),
+
+  addCategory: (cat: ExpenseCategory) =>
+    pick(() => supabaseApi.addCategory(cat), () => api.addCategory(cat), () => localApi.addCategory(cat)),
+  updateCategory: (name: string, patch: Partial<ExpenseCategory>) =>
+    pick(
+      () => supabaseApi.updateCategory(name, patch),
+      () => api.updateCategory(name, patch),
+      () => localApi.updateCategory(name, patch),
+    ),
+  deleteCategory: (name: string) =>
+    pick(() => supabaseApi.deleteCategory(name), () => api.deleteCategory(name), () => localApi.deleteCategory(name)),
 
   // Só disponíveis no modo local (fallback estático)
   resetFromSeed: () => localApi.wipe(),

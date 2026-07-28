@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Expense, Income, FamilyProfile, ExpenseType, FinancialHealth } from '@/types/finance';
+import { Expense, Income, FamilyProfile, ExpenseType, ExpenseCategory, FinancialHealth } from '@/types/finance';
 import { storage as api } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ export function useFinances() {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [profiles, setProfiles] = useState<FamilyProfile[]>([]);
   const [debtGroups, setDebtGroups] = useState<string[]>([]);
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
 
   const [selectedProfileId, setSelectedProfileId] = useState<string | 'all'>('all');
   // Padrão: mês/ano corrente (a UI arranca já no período atual)
@@ -30,6 +31,7 @@ export function useFinances() {
       setIncomes(s.incomes);
       setExpenses(s.expenses);
       setDebtGroups(s.debtGroups);
+      setCategories(s.categories ?? []);
       setLastSaved(s.lastSaved ? new Date(s.lastSaved) : null);
       setApiError(null);
       loadedOnceRef.current = true;
@@ -226,12 +228,29 @@ export function useFinances() {
   }, [withErrorToast]);
 
   const deleteExpense = useCallback(async (id: string) => {
+    const snapshot = expenses.find((e) => e.id === id);
     const ok = await withErrorToast(async () => { await api.deleteExpense(id); return true; }, 'remover despesa');
     if (ok) {
       setExpenses((prev) => prev.filter((e) => e.id !== id));
       setHasUnsavedChanges(true);
+      if (snapshot) {
+        toast('Despesa removida', {
+          description: snapshot.name,
+          duration: 5000,
+          action: {
+            label: 'Desfazer',
+            onClick: async () => {
+              const restored = await withErrorToast(
+                () => api.createExpense({ ...snapshot, id: undefined as unknown as string }),
+                'restaurar despesa',
+              );
+              if (restored) setExpenses((prev) => [...prev, restored]);
+            },
+          },
+        });
+      }
     }
-  }, [withErrorToast]);
+  }, [expenses, withErrorToast]);
 
   const updateExpense = useCallback(async (expense: Expense) => {
     const updated = await withErrorToast(() => api.updateExpense(expense), 'atualizar despesa');
@@ -250,12 +269,29 @@ export function useFinances() {
   }, [withErrorToast]);
 
   const deleteIncome = useCallback(async (id: string) => {
+    const snapshot = incomes.find((i) => i.id === id);
     const ok = await withErrorToast(async () => { await api.deleteIncome(id); return true; }, 'remover renda');
     if (ok) {
       setIncomes((prev) => prev.filter((i) => i.id !== id));
       setHasUnsavedChanges(true);
+      if (snapshot) {
+        toast('Renda removida', {
+          description: snapshot.name,
+          duration: 5000,
+          action: {
+            label: 'Desfazer',
+            onClick: async () => {
+              const restored = await withErrorToast(
+                () => api.createIncome({ ...snapshot, id: undefined as unknown as string }),
+                'restaurar renda',
+              );
+              if (restored) setIncomes((prev) => [...prev, restored]);
+            },
+          },
+        });
+      }
     }
-  }, [withErrorToast]);
+  }, [incomes, withErrorToast]);
 
   const updateIncome = useCallback(async (income: Income) => {
     const updated = await withErrorToast(() => api.updateIncome(income), 'atualizar renda');
@@ -310,6 +346,30 @@ export function useFinances() {
     }
   }, [withErrorToast]);
 
+  const addCategory = useCallback(async (cat: ExpenseCategory) => {
+    const ok = await withErrorToast(async () => { await api.addCategory(cat); return true; }, 'criar categoria');
+    if (ok) setCategories((prev) => (prev.some((c) => c.name === cat.name) ? prev : [...prev, cat]));
+  }, [withErrorToast]);
+
+  const updateCategory = useCallback(async (name: string, patch: Partial<ExpenseCategory>) => {
+    const ok = await withErrorToast(async () => { await api.updateCategory(name, patch); return true; }, 'atualizar categoria');
+    if (ok) {
+      const newName = patch.name ?? name;
+      setCategories((prev) => prev.map((c) => (c.name === name ? { ...c, ...patch, name: newName } : c)));
+      if (newName !== name) {
+        setExpenses((prev) => prev.map((e) => (e.category === name ? { ...e, category: newName } : e)));
+      }
+    }
+  }, [withErrorToast]);
+
+  const deleteCategory = useCallback(async (name: string) => {
+    const ok = await withErrorToast(async () => { await api.deleteCategory(name); return true; }, 'remover categoria');
+    if (ok) {
+      setCategories((prev) => prev.filter((c) => c.name !== name));
+      setExpenses((prev) => prev.map((e) => (e.category === name ? { ...e, category: undefined } : e)));
+    }
+  }, [withErrorToast]);
+
   const expenseCountByGroup = useMemo(() => {
     const counts: Record<string, number> = {};
     expenses.forEach((e) => {
@@ -317,6 +377,16 @@ export function useFinances() {
     });
     return counts;
   }, [expenses]);
+
+  // Contagem total (todos os meses/anos) por perfil — usado no diálogo de
+  // exclusão pra avisar quantos registros vão em cascata
+  const countsByProfile = useMemo(() => {
+    const out: Record<string, { expenses: number; incomes: number }> = {};
+    for (const p of profiles) out[p.id] = { expenses: 0, incomes: 0 };
+    for (const e of expenses) if (out[e.profileId]) out[e.profileId].expenses++;
+    for (const i of incomes) if (out[i.profileId]) out[i.profileId].incomes++;
+    return out;
+  }, [profiles, expenses, incomes]);
 
   const hasDataInCurrentMonth = useMemo(
     () => filteredExpenses.length > 0 || filteredIncomes.length > 0,
@@ -420,6 +490,15 @@ export function useFinances() {
     editDebtGroup,
     deleteDebtGroup,
     expenseCountByGroup,
+
+    // Profile counts (for delete-safety UI)
+    countsByProfile,
+
+    // Categories (custom)
+    categories,
+    addCategory,
+    updateCategory,
+    deleteCategory,
 
     // Copy
     hasDataInCurrentMonth,
