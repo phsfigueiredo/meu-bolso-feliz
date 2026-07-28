@@ -1,6 +1,7 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Expense, Income, FamilyProfile, ExpenseType, FinancialHealth } from '@/types/finance';
 import { storage as api } from '@/lib/storage';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export function useFinances() {
@@ -18,6 +19,8 @@ export function useFinances() {
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  const loadedOnceRef = useRef(false);
+
   const reloadAll = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -28,15 +31,35 @@ export function useFinances() {
       setDebtGroups(s.debtGroups);
       setLastSaved(s.lastSaved ? new Date(s.lastSaved) : null);
       setApiError(null);
+      loadedOnceRef.current = true;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setApiError(msg);
+      // Só faz toast se já tinha carregado antes — evita ruído na primeira
+      // tentativa (que pode falhar por race com JWT ainda não propagado)
+      if (loadedOnceRef.current) {
+        toast.error('Falha ao carregar dados', { description: msg });
+      }
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => { void reloadAll(); }, [reloadAll]);
+  // Recarrega no mount E toda vez que a sessão Supabase muda (sign-in,
+  // token refresh, sign-out → sign-in). Consertar o "tela em branco no
+  // primeiro login" — antes o fetch podia acontecer antes do JWT estar
+  // pronto e falhar silenciosamente.
+  useEffect(() => {
+    void reloadAll();
+    if (!supabase) return;
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) return;
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        void reloadAll();
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [reloadAll]);
 
   const withErrorToast = useCallback(async <T,>(op: () => Promise<T>, label: string): Promise<T | null> => {
     try {

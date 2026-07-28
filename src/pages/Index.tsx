@@ -88,6 +88,8 @@ const IndexContent = () => {
     isSaving,
     lastSaved,
     hasUnsavedChanges,
+    isLoading,
+    apiError,
   } = useFinances();
 
   const filteredExpensesByDueDay = {
@@ -127,6 +129,17 @@ const IndexContent = () => {
   const handleSaveIncome = (income: Income) => {
     updateIncome(income);
   };
+
+  // Loading inicial: quando ainda não temos dados na tela E o hook ainda
+  // está buscando. Depois que a primeira carga completa, o loading não
+  // bloqueia mais (evita piscar toda vez que o usuário troca de mês).
+  if (isLoading && profiles.length === 0 && !apiError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Carregando seus dados...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
