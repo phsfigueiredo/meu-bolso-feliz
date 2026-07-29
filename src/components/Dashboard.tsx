@@ -92,14 +92,14 @@ export function Dashboard({
           icon={TrendingUp}
         />
         <StatCard
-          title="2º Pag. (Dia 10)"
-          value={formatCurrency(totalByDueDay[10])}
+          title="2º Pag. (Dia 15)"
+          value={formatCurrency(totalByDueDay[15])}
           subtitle="Total de gastos"
           icon={TrendingUp}
         />
         <StatCard
-          title="3º Pag. (Dia 15)"
-          value={formatCurrency(totalByDueDay[15])}
+          title="3º Pag. (Dia 20)"
+          value={formatCurrency(totalByDueDay[20])}
           subtitle="Total de gastos"
           icon={TrendingUp}
         />
