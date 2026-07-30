@@ -181,127 +181,49 @@ export function useFinances() {
     return grouped;
   }, [filteredExpenses]);
 
+  // Próximas dívidas a acabar: usa currentInstallment/totalInstallments como
+  // fonte principal (o "2/3" que aparece na frente da conta). Deduplica por
+  // nome pegando a ocorrência com a parcela mais avançada, ordena pelas que
+  // faltam menos parcelas até quitar.
   const upcomingDebtEndings = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const byName = new Map<string, typeof expenses[number]>();
 
-    // Preferência 1: parcelados com endDate NO FUTURO ordenados por endDate
-    const withFutureEndDate = expenses
-      .filter((e) => e.paymentType === 'parcelado' && e.endDate && new Date(e.endDate) >= today)
-      .sort((a, b) => new Date(a.endDate!).getTime() - new Date(b.endDate!).getTime());
-
-    // Deduplica por nome (várias cópias da mesma dívida nos meses não deveriam aparecer todas)
-    const seenNames = new Set<string>();
-    const deduped: typeof withFutureEndDate = [];
-    for (const e of withFutureEndDate) {
-      if (seenNames.has(e.name)) continue;
-      seenNames.add(e.name);
-      deduped.push(e);
-    }
-
-    // Preferência 2: se sobrar espaço, adicionar parcelados com current/total conhecidos
-    // usando o instalamento mais recente (currentInstallment mais alto por nome)
-    if (deduped.length < 5) {
-      const byName = new Map<string, typeof expenses[number]>();
-      for (const e of expenses) {
-        if (e.paymentType !== 'parcelado') continue;
-        if (e.currentInstallment == null || e.totalInstallments == null) continue;
-        if (e.currentInstallment >= e.totalInstallments) continue; // já quitada
-        if (seenNames.has(e.name)) continue;
-        const existing = byName.get(e.name);
-        if (!existing || (e.currentInstallment ?? 0) > (existing.currentInstallment ?? 0)) {
-          byName.set(e.name, e);
-        }
+    for (const e of expenses) {
+      if (e.paymentType !== 'parcelado') continue;
+      if (e.currentInstallment == null || e.totalInstallments == null) continue;
+      if (e.currentInstallment >= e.totalInstallments) continue; // já quitada
+      const existing = byName.get(e.name);
+      if (!existing || (e.currentInstallment ?? 0) > (existing.currentInstallment ?? 0)) {
+        byName.set(e.name, e);
       }
-      const remaining = 5 - deduped.length;
-      const extras = Array.from(byName.values())
-        .sort((a, b) => {
-          const ra = (a.totalInstallments! - a.currentInstallment!);
-          const rb = (b.totalInstallments! - b.currentInstallment!);
-          return ra - rb;
-        })
-        .slice(0, remaining);
-      deduped.push(...extras);
     }
 
-    return deduped.slice(0, 5);
+    return Array.from(byName.values())
+      .sort((a, b) => {
+        const ra = (a.totalInstallments! - a.currentInstallment!);
+        const rb = (b.totalInstallments! - b.currentInstallment!);
+        return ra - rb; // menos parcelas restantes primeiro
+      })
+      .slice(0, 5);
   }, [expenses]);
 
-  // Saúde financeira baseada em uma janela de dados, não só o mês selecionado.
-  // Regras:
-  //   1) Se o mês selecionado tem renda + gastos, usa esses valores.
-  //   2) Caso contrário, usa média dos últimos 6 meses (fallback estável).
-  //   3) Se não houver dados suficientes, resulta em zeros mas SEM inflar o score.
+  // Saúde financeira do MÊS SELECIONADO — cada mês tem seu próprio score,
+  // sem janela nem média. Assim dá pra comparar mês a mês navegando no seletor.
   const financialHealth = useMemo((): FinancialHealth => {
-    // Filtra dados considerando perfil (mas ignora mês/ano — vamos agregar por período)
-    const scopedExpenses = expenses.filter(
-      (e) => selectedProfileId === 'all' || e.profileId === selectedProfileId,
-    );
-    const scopedIncomes = incomes.filter(
-      (i) => selectedProfileId === 'all' || i.profileId === selectedProfileId,
-    );
-
-    // Chave "YYYY-MM" para agrupar
-    const key = (m: number, y: number) => `${y}-${String(m).padStart(2, '0')}`;
-
-    const expensesByMonth = new Map<string, number>();
-    for (const e of scopedExpenses) {
-      const k = key(e.month, e.year);
-      expensesByMonth.set(k, (expensesByMonth.get(k) ?? 0) + e.amount);
-    }
-    const incomesByMonth = new Map<string, number>();
-    for (const i of scopedIncomes) {
-      const k = key(i.month, i.year);
-      incomesByMonth.set(k, (incomesByMonth.get(k) ?? 0) + i.amount);
-    }
-
-    // Janela: últimos 6 meses do mês selecionado, incluindo ele
-    const windowMonths: string[] = [];
-    for (let offset = 0; offset < 6; offset++) {
-      let m = selectedMonth - offset;
-      let y = selectedYear;
-      while (m <= 0) { m += 12; y -= 1; }
-      windowMonths.push(key(m, y));
-    }
-
-    // Média dos últimos 6 meses (só conta meses com dados de renda ou despesa)
-    let sumIncomes = 0;
-    let sumExpenses = 0;
-    let monthsWithData = 0;
-    for (const k of windowMonths) {
-      const inc = incomesByMonth.get(k) ?? 0;
-      const exp = expensesByMonth.get(k) ?? 0;
-      if (inc > 0 || exp > 0) {
-        sumIncomes += inc;
-        sumExpenses += exp;
-        monthsWithData++;
-      }
-    }
-
-    // Prioriza o mês selecionado se tiver dados; senão usa a média
-    const selectedKey = key(selectedMonth, selectedYear);
-    const curInc = incomesByMonth.get(selectedKey) ?? 0;
-    const curExp = expensesByMonth.get(selectedKey) ?? 0;
-    const useCurrentMonth = curInc > 0 && curExp > 0;
-
-    const effIncome = useCurrentMonth
-      ? curInc
-      : (monthsWithData > 0 ? sumIncomes / monthsWithData : 0);
-    const effExpense = useCurrentMonth
-      ? curExp
-      : (monthsWithData > 0 ? sumExpenses / monthsWithData : 0);
-    const effBalance = effIncome - effExpense;
+    const effIncome = totalIncome;
+    const effExpense = totalExpenses;
+    const effBalance = balance;
 
     const savingsRate = effIncome > 0 ? ((effIncome - effExpense) / effIncome) * 100 : 0;
     const debtToIncomeRatio = effIncome > 0 ? (effExpense / effIncome) * 100 : 0;
     const emergencyFundMonths = effExpense > 0 && effBalance > 0 ? effBalance / effExpense : 0;
 
-    // Score: se não há dados suficientes, retorna 0 (não 50 mascarado)
+    // Sem dados no mês → score 0, status crítico
     if (effIncome === 0 && effExpense === 0) {
       return { score: 0, status: 'critico', savingsRate: 0, debtToIncomeRatio: 0, emergencyFundMonths: 0 };
     }
 
-    // Se há gasto mas nenhuma renda → crítico
+    // Gasto sem renda → crítico total
     if (effIncome === 0 && effExpense > 0) {
       return { score: 0, status: 'critico', savingsRate: 0, debtToIncomeRatio: 100, emergencyFundMonths: 0 };
     }
@@ -317,9 +239,8 @@ export function useFinances() {
     else if (debtToIncomeRatio <= 70) score += 5;
     else if (debtToIncomeRatio <= 90) score -= 10;
     else if (debtToIncomeRatio <= 100) score -= 20;
-    else score -= 35; // gasto > renda
+    else score -= 35;
 
-    // Bônus por ter reserva de emergência
     if (emergencyFundMonths >= 3) score += 5;
 
     score = Math.max(0, Math.min(100, Math.round(score)));
@@ -332,7 +253,7 @@ export function useFinances() {
     else status = 'critico';
 
     return { score, status, savingsRate, debtToIncomeRatio, emergencyFundMonths };
-  }, [expenses, incomes, selectedMonth, selectedYear, selectedProfileId]);
+  }, [totalIncome, totalExpenses, balance]);
 
   // Mutations -------------------------------------------------------------
   const toggleExpenseStatus = useCallback(async (id: string) => {
