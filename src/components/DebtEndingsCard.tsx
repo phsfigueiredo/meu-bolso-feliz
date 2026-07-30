@@ -19,10 +19,27 @@ export function DebtEndingsCard({ debts, profiles }: DebtEndingsCardProps) {
 
   const getProfile = (profileId: string) => profiles.find((p) => p.id === profileId);
 
-  const getMonthsRemaining = (endDate: string) => {
-    const end = parseISO(endDate);
-    const now = new Date();
-    return Math.max(0, differenceInMonths(end, now));
+  const getMonthsRemaining = (debt: Expense): number => {
+    // Preferência 1: usar current/total_installments se disponível
+    if (debt.currentInstallment != null && debt.totalInstallments != null) {
+      return Math.max(0, debt.totalInstallments - debt.currentInstallment);
+    }
+    // Preferência 2: calcular pela data final
+    if (debt.endDate) {
+      const end = parseISO(debt.endDate);
+      return Math.max(0, differenceInMonths(end, new Date()));
+    }
+    return 0;
+  };
+
+  const describeParcelas = (debt: Expense): string => {
+    if (debt.currentInstallment != null && debt.totalInstallments != null) {
+      return `${debt.currentInstallment}/${debt.totalInstallments} parcelas`;
+    }
+    if (debt.endDate) {
+      return `Termina em ${format(parseISO(debt.endDate), "MMM/yyyy", { locale: ptBR })}`;
+    }
+    return 'Parcelado';
   };
 
   if (debts.length === 0) {
@@ -59,10 +76,8 @@ export function DebtEndingsCard({ debts, profiles }: DebtEndingsCardProps) {
         <div className="space-y-3">
           {debts.map((debt) => {
             const profile = getProfile(debt.profileId);
-            const monthsRemaining = debt.endDate ? getMonthsRemaining(debt.endDate) : 0;
-            const endDateFormatted = debt.endDate 
-              ? format(parseISO(debt.endDate), "MMMM 'de' yyyy", { locale: ptBR })
-              : 'N/A';
+            const monthsRemaining = getMonthsRemaining(debt);
+            const detail = describeParcelas(debt);
 
             return (
               <div
@@ -78,17 +93,16 @@ export function DebtEndingsCard({ debts, profiles }: DebtEndingsCardProps) {
                   )}
                   <div>
                     <p className="font-medium">{debt.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {debt.currentInstallment}/{debt.totalInstallments} parcelas • 
-                      Termina em {endDateFormatted}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{detail}</p>
                   </div>
                 </div>
 
                 <div className="text-right">
                   <p className="font-semibold">{formatCurrency(debt.amount)}/mês</p>
                   <p className="text-xs text-muted-foreground">
-                    {monthsRemaining} {monthsRemaining === 1 ? 'mês restante' : 'meses restantes'}
+                    {monthsRemaining === 0
+                      ? 'Última parcela'
+                      : `${monthsRemaining} ${monthsRemaining === 1 ? 'mês restante' : 'meses restantes'}`}
                   </p>
                 </div>
               </div>

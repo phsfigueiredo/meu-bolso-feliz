@@ -294,7 +294,12 @@ const IndexContent = () => {
 
           <TabsContent value="health" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-2">
-              <FinancialHealthCard health={financialHealth} />
+              <FinancialHealthCard
+                health={financialHealth}
+                totalIncome={totalIncome}
+                totalExpenses={totalExpenses}
+                balance={balance}
+              />
               <DebtEndingsCard debts={upcomingDebtEndings} profiles={profiles} />
             </div>
           </TabsContent>
