@@ -14,7 +14,10 @@ interface GroupedExpenseListProps {
   onToggleStatus: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (expense: Expense) => void;
+  onMoveToDueDay?: (id: string, newDueDay: 15 | 20 | 30) => void;
 }
+
+const DRAG_MIME = 'application/x-mbf-expense-id';
 
 export function GroupedExpenseList({
   title,
@@ -24,8 +27,10 @@ export function GroupedExpenseList({
   onToggleStatus,
   onDelete,
   onEdit,
+  onMoveToDueDay,
 }: GroupedExpenseListProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [isDropTarget, setIsDropTarget] = useState(false);
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -34,7 +39,62 @@ export function GroupedExpenseList({
     }).format(value);
   };
 
+  // -------- Drag & drop entre grupos de vencimento --------
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!onMoveToDueDay) return;
+    if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
+    e.preventDefault(); // permite drop
+    e.dataTransfer.dropEffect = 'move';
+    if (!isDropTarget) setIsDropTarget(true);
+  };
+  const handleDragLeave = () => setIsDropTarget(false);
+  const handleDrop = (e: React.DragEvent) => {
+    if (!onMoveToDueDay) return;
+    e.preventDefault();
+    setIsDropTarget(false);
+    const id = e.dataTransfer.getData(DRAG_MIME);
+    if (id) onMoveToDueDay(id, dueDay);
+  };
+
+  const renderDraggableCard = (expense: Expense, index: number) => (
+    <div
+      key={expense.id}
+      draggable={!!onMoveToDueDay}
+      onDragStart={(e) => {
+        if (!onMoveToDueDay) return;
+        e.dataTransfer.setData(DRAG_MIME, expense.id);
+        e.dataTransfer.effectAllowed = 'move';
+      }}
+      style={{ animationDelay: `${index * 50}ms` }}
+      className={cn(onMoveToDueDay && 'cursor-grab active:cursor-grabbing')}
+      title={onMoveToDueDay ? 'Arraste para outro dia de vencimento' : undefined}
+    >
+      <ExpenseCard
+        expense={expense}
+        onToggleStatus={onToggleStatus}
+        onDelete={onDelete}
+        onEdit={onEdit}
+      />
+    </div>
+  );
+
   if (expenses.length === 0) {
+    // Se estiver vazio mas o handler existe, ainda vira zona de drop
+    if (onMoveToDueDay) {
+      return (
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={cn(
+            'rounded-xl border-2 border-dashed p-6 text-center text-sm text-muted-foreground transition-colors',
+            isDropTarget ? 'border-primary bg-primary/10 text-primary' : 'border-muted-foreground/20',
+          )}
+        >
+          {dueDayLabels[dueDay]} — arraste uma despesa aqui pra mover
+        </div>
+      );
+    }
     return null;
   }
 
@@ -76,7 +136,15 @@ export function GroupedExpenseList({
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div
+      className={cn(
+        'space-y-4 animate-fade-in rounded-xl transition-colors',
+        isDropTarget && 'ring-2 ring-primary bg-primary/5 p-2 -m-2',
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -111,16 +179,7 @@ export function GroupedExpenseList({
             // Renderizar despesas sem grupo diretamente
             return (
               <div key={groupKey} className="space-y-3">
-                {groupExpenses.map((expense, index) => (
-                  <div key={expense.id} style={{ animationDelay: `${index * 50}ms` }}>
-                    <ExpenseCard
-                      expense={expense}
-                      onToggleStatus={onToggleStatus}
-                      onDelete={onDelete}
-                      onEdit={onEdit}
-                    />
-                  </div>
-                ))}
+                {groupExpenses.map((expense, index) => renderDraggableCard(expense, index))}
               </div>
             );
           }
@@ -180,16 +239,7 @@ export function GroupedExpenseList({
               
               {!isCollapsed && (
                 <div className="px-4 pb-4 space-y-3">
-                  {groupExpenses.map((expense, index) => (
-                    <div key={expense.id} style={{ animationDelay: `${index * 50}ms` }}>
-                      <ExpenseCard
-                        expense={expense}
-                        onToggleStatus={onToggleStatus}
-                        onDelete={onDelete}
-                        onEdit={onEdit}
-                      />
-                    </div>
-                  ))}
+                  {groupExpenses.map((expense, index) => renderDraggableCard(expense, index))}
                 </div>
               )}
             </div>

@@ -72,6 +72,7 @@ const IndexContent = () => {
     addExpense,
     deleteExpense,
     updateExpense,
+    moveExpenseDueDay,
     addIncome,
     deleteIncome,
     updateIncome,
@@ -278,6 +279,7 @@ const IndexContent = () => {
                   onToggleStatus={toggleExpenseStatus}
                   onDelete={deleteExpense}
                   onEdit={handleEditExpense}
+                  onMoveToDueDay={moveExpenseDueDay}
                 />
               ))}
             </div>

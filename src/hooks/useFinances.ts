@@ -256,6 +256,27 @@ export function useFinances() {
   }, [totalIncome, totalExpenses, balance]);
 
   // Mutations -------------------------------------------------------------
+  // Move uma despesa entre dias de vencimento (arrastando entre os grupos)
+  const moveExpenseDueDay = useCallback(async (id: string, newDueDay: 15 | 20 | 30) => {
+    const current = expenses.find((e) => e.id === id);
+    if (!current || current.dueDay === newDueDay) return;
+
+    // Otimista: atualiza local imediatamente pra feedback visual instantâneo
+    setExpenses((prev) => prev.map((e) => (e.id === id ? { ...e, dueDay: newDueDay } : e)));
+    setHasUnsavedChanges(true);
+
+    const updated = await withErrorToast(
+      () => api.updateExpense({ ...current, dueDay: newDueDay }),
+      'mover despesa',
+    );
+    if (updated) {
+      setExpenses((prev) => prev.map((e) => (e.id === id ? updated : e)));
+    } else {
+      // Rollback em caso de falha
+      setExpenses((prev) => prev.map((e) => (e.id === id ? current : e)));
+    }
+  }, [expenses, withErrorToast]);
+
   const toggleExpenseStatus = useCallback(async (id: string) => {
     const updated = await withErrorToast(() => api.toggleExpense(id), 'alternar status');
     if (updated) {
@@ -522,6 +543,7 @@ export function useFinances() {
     addExpense,
     deleteExpense,
     updateExpense,
+    moveExpenseDueDay,
     addIncome,
     deleteIncome,
     updateIncome,
